@@ -1,0 +1,57 @@
+#!/bin/bash
+
+function assert {
+  if [ "$1" != "$2" ]; then
+    echo "Wrong answer! Expected [$1], found [$2]"
+    if [ -n "$3" ]; then
+      echo "(input array was [$3])"
+    fi
+    exit 1
+  fi
+}
+
+function run_suite {
+  prog=${*:2}
+
+  exec 5< "../_test/$1.in"
+
+  read input_n <&5
+  while [[ -n $input_n ]]; do
+    read input_arr <&5
+    printf "$input_n\n$input_arr\n" | $prog
+    read input_n <&5
+  done
+
+  exec 5<&-
+}
+
+function test_suite {
+  prog=${*:2}
+
+  exec 5< "../_test/$1.in"
+  exec 6< "../_test/$1.out"
+
+  read expected <&6
+  while [[ -n $expected ]]; do
+    read input_n <&5
+    read input_arr <&5
+    actual=$(printf "$input_n\n$input_arr\n" | $prog)
+    assert "$expected" "$actual" "$input_arr"
+    read expected <&6
+  done
+
+  exec 5<&-
+  exec 6<&-
+  echo "All tests in dataset $1 passed!"
+}
+
+cd $1 || exit 1
+
+case $1 in
+  c) gcc quicksort.c -o quicksort && \
+     test_suite test1 ./quicksort
+     ;;
+  java) javac Quicksort.java && \
+        test_suite test1 java Quicksort
+        ;;
+esac
