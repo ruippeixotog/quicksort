@@ -51,6 +51,9 @@ case $1 in
   c) gcc quicksort.c -o quicksort && \
      test_suite test1 ./quicksort
      ;;
+  c++) g++ quicksort.cpp -o quicksort && \
+       test_suite test1 ./quicksort
+       ;;
   java) javac Quicksort.java && \
         test_suite test1 java Quicksort
         ;;
