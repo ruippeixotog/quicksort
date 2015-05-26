@@ -54,4 +54,7 @@ case $1 in
   java) javac Quicksort.java && \
         test_suite test1 java Quicksort
         ;;
+  scala) scalac Quicksort.scala && \
+         test_suite test1 scala Quicksort
+         ;;
 esac
