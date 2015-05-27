@@ -57,6 +57,8 @@ case $1 in
   java) javac Quicksort.java && \
         test_suite test1 java Quicksort
         ;;
+  python) test_suite test1 python quicksort.py
+          ;;
   ruby) test_suite test1 ruby quicksort.rb
         ;;
   scala) scalac Quicksort.scala && \
