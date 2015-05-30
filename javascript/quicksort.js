@@ -1,5 +1,8 @@
 var readline = require('readline');
-var input = readline.createInterface({ input: process.stdin });
+var input = readline.createInterface({
+  input: process.stdin,
+  terminal: false
+});
 
 function swap(arr, i, j) {
   var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
