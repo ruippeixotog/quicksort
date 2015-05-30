@@ -45,6 +45,14 @@ function test_suite {
   echo "All tests in dataset $1 passed!"
 }
 
+if [ $1 == "all" ]; then
+  for lang in $(ls -d */ | egrep -v '^_' | tr -d /); do
+    echo "Testing $lang version..."
+    ./test $lang
+  done
+  exit 0
+fi
+
 cd $1 || exit 1
 
 case $1 in
