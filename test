@@ -79,4 +79,7 @@ case $1 in
   scala) scalac Quicksort.scala && \
          test_suite test1 scala Quicksort
          ;;
+  sml) ml-build quicksort.cm Quicksort.main sml-image > /dev/null && \
+       test_suite test1 sml @SMLload=sml-image
+       ;;
 esac

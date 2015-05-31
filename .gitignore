@@ -2,3 +2,5 @@ quicksort
 *.class
 *.hi
 *.o
+.cm
+sml-image*
