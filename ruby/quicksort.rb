@@ -5,7 +5,7 @@ def quicksort(arr)
   else
     pivot = arr[0]
     lower, upper = arr[1..-1].partition { |x| x < pivot }
-    [quicksort(lower), pivot, quicksort(upper)].flatten
+    quicksort(lower) + [pivot] + quicksort(upper)
   end
 end
 
