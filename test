@@ -45,6 +45,15 @@ function test_suite {
   echo "All tests in dataset $1 passed!"
 }
 
+function test_static {
+  prog=$@
+  expected='1 2 3 4 5 6 7 8 9 10'
+  actual=$($prog)
+  assert "$expected" "$actual"
+
+  echo "Static test passed!"
+}
+
 if [ $1 == "all" ]; then
   for lang in $(ls -d */ | egrep -v '^_' | tr -d /); do
     echo "Testing $lang version..."
@@ -72,6 +81,11 @@ case $1 in
         ;;
   javascript) test_suite test1 node quicksort.js
               ;;
+  php) php -S localhost:8000 > /dev/null 2>&1 &
+       trap "kill -9 $!" EXIT
+       sleep 1
+       test_static curl -s localhost:8000/quicksort.php
+       ;;
   python) test_suite test1 python quicksort.py
           ;;
   ruby) test_suite test1 ruby quicksort.rb
