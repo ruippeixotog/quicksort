@@ -88,6 +88,8 @@ case $1 in
        ;;
   python) test_suite test1 python quicksort.py
           ;;
+  racket) test_suite test1 racket quicksort.rkt
+          ;;
   ruby) test_suite test1 ruby quicksort.rb
         ;;
   scala) scalac Quicksort.scala && \
