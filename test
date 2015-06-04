@@ -86,6 +86,10 @@ case $1 in
        sleep 1
        test_static curl -s localhost:8000/quicksort.php
        ;;
+  prolog) swipl -q --stand_alone=true --goal=main --toplevel=halt \
+            --foreign=save -o quicksort -c quicksort.pl && \
+          test_suite test1 ./quicksort
+          ;;
   python) test_suite test1 python quicksort.py
           ;;
   racket) test_suite test1 racket quicksort.rkt
