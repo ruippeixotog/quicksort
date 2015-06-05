@@ -4,3 +4,4 @@ quicksort
 *.o
 .cm
 sml-image*
+*.exe
