@@ -14,5 +14,5 @@ showIntList = (intercalate " ") . (map show)
 
 main = do n <- getLine
           arr <- getLine
-          let sorted = quicksort (readIntList arr)
-          putStrLn (showIntList sorted)
+          let sorted = quicksort $ readIntList arr
+          putStrLn $ showIntList sorted
