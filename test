@@ -65,6 +65,10 @@ fi
 cd $1 || exit 1
 
 case $1 in
+  assembly) nasm -g -f elf quicksort.asm && \
+            gcc -m32 -o quicksort quicksort.o && \
+            test_suite test1 ./quicksort
+            ;;
   bash) test_suite test1 bash quicksort.sh
         ;;
   c) gcc quicksort.c -o quicksort && \
