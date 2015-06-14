@@ -65,6 +65,10 @@ fi
 cd $1 || exit 1
 
 case $1 in
+  apl) wget -q -nc https://raw.githubusercontent.com/ngn/apl/f31f06/lib/apl.js && \
+       chmod +x apl.js && \
+       test_suite test1 ./apl.js quicksort.apl
+       ;;
   assembly) nasm -g -f elf quicksort.asm && \
             gcc -m32 -o quicksort quicksort.o && \
             test_suite test1 ./quicksort
