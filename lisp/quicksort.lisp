@@ -15,5 +15,5 @@
         (append (quicksort (car part)) (list pivot) (quicksort (cdr part))))))
 
 (defvar n (read))
-(defvar arr (loop for i below n collect (read)))
-(princ (format nil "~{~A~^ ~}~%" (quicksort arr)))
+(defvar xs (loop for i below n collect (read)))
+(princ (format nil "~{~A~^ ~}~%" (quicksort xs)))

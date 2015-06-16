@@ -7,7 +7,7 @@
         (append (quicksort lower) (list pivot) (quicksort upper)))))
 
 (define n (read))
-(define arr (for/list ([i (in-range n)]) (read)))
+(define xs (for/list ([i (in-range n)]) (read)))
 
-(define sorted (quicksort arr))
+(define sorted (quicksort xs))
 (displayln (string-join (map number->string sorted)))
