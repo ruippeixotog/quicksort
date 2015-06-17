@@ -1,12 +1,8 @@
 (defun partition (f xs)
-  (labels ((aux (p1 p2 ys)
-                (if (null ys) (cons p1 p2)
-                    (destructuring-bind
-                      (head . tail) ys
-                      (if (funcall f head)
-                          (aux (cons head p1) p2 tail)
-                          (aux p1 (cons head p2) tail))))))
-          (aux '() '() xs)))
+  (loop for x in xs
+        if (funcall f x) collect x into l
+        else collect x into r
+        finally (return (cons l r))))
 
 (defun quicksort (xs)
   (if (null xs) xs
