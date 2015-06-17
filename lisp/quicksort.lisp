@@ -5,7 +5,7 @@
         finally (return (values l r))))
 
 (defun quicksort (xs)
-  (if (null xs) xs
+  (when xs
     (let ((pivot (car xs)))
       (multiple-value-bind (l r) (partition (lambda (x) (< x pivot)) (cdr xs))
         (append (quicksort l) (list pivot) (quicksort r))))))
