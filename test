@@ -87,6 +87,8 @@ case $1 in
   f#) fsharpc --nologo Quicksort.fs && \
       test_suite test1 mono Quicksort.exe
       ;;
+  groovy) test_suite test1 groovy quicksort.groovy
+          ;;
   haskell) ghc quicksort.hs -v0 -o quicksort && \
            test_suite test1 ./quicksort
            ;;
