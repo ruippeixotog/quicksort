@@ -84,6 +84,8 @@ case $1 in
   c++) g++ quicksort.cpp -o quicksort && \
        test_suite test1 ./quicksort
        ;;
+  erlang) test_suite test1 escript quicksort.erl
+          ;;
   f#) fsharpc --nologo Quicksort.fs && \
       test_suite test1 mono Quicksort.exe
       ;;
