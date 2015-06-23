@@ -34,7 +34,7 @@ trait TypeOps { this: TypeDefs =>
 
   // Nat comparators
 
-  sealed trait <[A, B]
+  trait <[A, B]
   implicit def zeroLessThanSucc[A <: Nat] = new (_0 < Succ[A]) {}
   implicit def succLessThanSucc[A <: Nat, B <: Nat](implicit ev: A < B) = new (Succ[A] < Succ[B]) {}
 
@@ -69,13 +69,13 @@ trait TypeOps { this: TypeDefs =>
   implicit def hNilQuicksort = new Quicksort[HNil] { type Out = HNil }
 
   implicit def hConsQuicksort[A <: Nat, Tail <: HList, Lower <: HList, Upper <: HList,
-                              LowerSorted <: HList, UpperSorted <: HList, Sorted <: HList](
+                              LowerSorted <: HList, UpperSorted <: HList](
     implicit ev: Partition[A, Tail] { type Out1 = Lower; type Out2 = Upper },
              ev2: Quicksort[Lower] { type Out = LowerSorted },
              ev3: Quicksort[Upper] { type Out = UpperSorted },
-             ev4: (LowerSorted ::: A :: UpperSorted) { type Out = Sorted }) = new Quicksort[A :: Tail] {
+             ev4: LowerSorted ::: A :: UpperSorted) = new Quicksort[A :: Tail] {
 
-    type Out = Sorted
+    type Out = ev4.Out
   }
 
   // generation of string representations of types
