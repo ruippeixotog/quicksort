@@ -119,6 +119,9 @@ case $1 in
   scala) scalac Quicksort.scala && \
          test_suite test1 scala Quicksort
          ;;
+  scala-typelevel) scalac -language:_ Quicksort.scala && \
+                   test_static scala Quicksort
+                   ;;
   sml) ml-build quicksort.cm Quicksort.main sml-image > /dev/null && \
        test_suite test1 sml @SMLload=sml-image
        ;;
