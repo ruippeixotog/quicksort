@@ -1,5 +1,4 @@
-let rec quicksort xs =
-  match xs with
+let rec quicksort = function
   | [] -> []
   | pivot :: tail ->
       let lower, upper = List.partition (fun x -> x < pivot) tail
