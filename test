@@ -116,6 +116,9 @@ case $1 in
           ;;
   ruby) test_suite test1 ruby quicksort.rb
         ;;
+  rust) rustc quicksort.rs && \
+        test_suite test1 ./quicksort
+        ;;
   scala) scalac Quicksort.scala && \
          test_suite test1 scala Quicksort
          ;;
