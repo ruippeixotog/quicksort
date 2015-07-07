@@ -94,6 +94,9 @@ case $1 in
   haskell) ghc quicksort.hs -v0 -o quicksort && \
            test_suite test1 ./quicksort
            ;;
+  idris) idris quicksort.idr -o quicksort && \
+         test_suite test1 ./quicksort
+         ;;
   java) javac Quicksort.java && \
         test_suite test1 java Quicksort
         ;;
