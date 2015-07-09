@@ -104,6 +104,8 @@ case $1 in
               ;;
   lisp) test_suite test1 clisp quicksort.lisp
         ;;
+  perl) test_suite test1 perl quicksort.pl
+        ;;
   php) php -S localhost:8000 > /dev/null 2>&1 &
        trap "kill -9 $!" EXIT
        sleep 1
