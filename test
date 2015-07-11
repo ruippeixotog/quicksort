@@ -75,6 +75,8 @@ case $1 in
             ;;
   bash) test_suite test1 bash quicksort.sh
         ;;
+  bash-pipes) test_suite test1 bash quicksort.sh
+              ;;
   c) gcc quicksort.c -o quicksort && \
      test_suite test1 ./quicksort
      ;;

@@ -1,13 +1,13 @@
 #!/bin/bash
 declare -a arr
 
-function swap {
+swap() {
   local tmp=${arr[$1]}
   arr[$1]=${arr[$2]}
   arr[$2]=$tmp
 }
 
-function quicksort {
+quicksort() {
   local st=$1
   local end=$2
 
