@@ -27,5 +27,5 @@ fn main() {
   quicksort(&mut v);
 
   let v_str: Vec<String> = v.iter().map(|x| x.to_string()).collect();
-  println!("{}", v_str.connect(" "));
+  println!("{}", v_str.join(" "));
 }

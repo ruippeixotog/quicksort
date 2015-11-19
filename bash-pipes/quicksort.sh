@@ -6,7 +6,7 @@ partition() {
 
 quicksort() {
   read pivot && test -n $pivot && {
-    lower=$(mktemp -t qs); upper=$(mktemp -t qs)
+    lower=$(mktemp); upper=$(mktemp)
     partition $pivot $lower $upper
     cat <(quicksort < $lower) <(echo $pivot) <(quicksort < $upper)
     rm $lower $upper
