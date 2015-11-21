@@ -119,6 +119,9 @@ case $1 in
         ;;
   lua) test_suite test1 lua quicksort.lua
        ;;
+  pascal) fpc -v0 quicksort.pas && \
+          test_suite test1 ./quicksort
+          ;;
   perl) test_suite test1 perl quicksort.pl
         ;;
   php) php -S localhost:8000 > /dev/null 2>&1 &
