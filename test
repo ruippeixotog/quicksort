@@ -112,6 +112,9 @@ case $1 in
         ;;
   javascript) test_suite test1 node quicksort.js
               ;;
+  kotlin) kotlinc quicksort.kt && \
+          test_suite test1 kotlin QuicksortKt
+          ;;
   lisp) test_suite test1 clisp quicksort.lisp
         ;;
   lua) test_suite test1 lua quicksort.lua
