@@ -107,6 +107,8 @@ case $1 in
   idris) idris quicksort.idr -o quicksort && \
          test_suite test1 ./quicksort
          ;;
+  io) test_suite test1 io quicksort.io
+      ;;
   java) javac Quicksort.java && \
         test_suite test1 java Quicksort
         ;;
