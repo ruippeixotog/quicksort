@@ -63,8 +63,8 @@ section .text                   ; // code
       push dword [esp+8]
       push ecx
       call quicksort
-      mov ecx, [esp]
-      add esp, 8                ;     quicksort(st, _sep);
+      pop ecx
+      add esp, 4                ;     quicksort(st, _sep);
 
       add ecx, 1
       push ecx
