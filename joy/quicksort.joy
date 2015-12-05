@@ -1,0 +1,7 @@
+DEFINE quicksort == [small] [] [uncons [>] split] [enconcat] binrec.
+
+DEFINE putl == [10 <] [48 + chr putch] [10 div] [] binrec.
+DEFINE putlist == [null] [pop] [unswons putl [" " putchars putl] step] ifte
+  "\n" putchars.
+
+[5 1 9 3 7 6 4 8 10 2] quicksort putlist.

@@ -114,6 +114,8 @@ case $1 in
         ;;
   javascript) test_suite test1 node quicksort.js
               ;;
+  joy) test_static joy quicksort.joy
+       ;;
   kotlin) kotlinc quicksort.kt && \
           test_suite test1 kotlin QuicksortKt
           ;;
