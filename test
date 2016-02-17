@@ -90,7 +90,7 @@ case $1 in
        ;;
   erlang) test_suite test1 escript quicksort.erl
           ;;
-  fortran) gfortran -o quicksort quicksort.f95 && \
+  fortran) gfortran -O3 -o quicksort quicksort.f90 && \
            test_suite test1 ./quicksort
            ;;
   f#) fsharpc --nologo Quicksort.fs && \
