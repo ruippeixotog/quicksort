@@ -88,6 +88,9 @@ case $1 in
   c++) g++ quicksort.cpp -o quicksort && \
        test_suite test1 ./quicksort
        ;;
+  c++-meta) g++ quicksort.cpp -o quicksort && \
+            test_static ./quicksort
+            ;;
   erlang) test_suite test1 escript quicksort.erl
           ;;
   fortran) gfortran -o quicksort quicksort.f95 && \
