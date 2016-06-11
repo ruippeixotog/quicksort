@@ -25,9 +25,11 @@ RUN apt-get -y install \
   gfortran fp-compiler
 
 # install Scala
-RUN wget http://downloads.typesafe.com/scala/2.11.7/scala-2.11.7.deb && \
-  dpkg -i scala-2.11.7.deb && \
-  rm scala-2.11.7.deb
+ENV SCALA_VERSION 2.11.7
+
+RUN wget http://downloads.typesafe.com/scala/$SCALA_VERSION/scala-$SCALA_VERSION.deb && \
+  dpkg -i scala-$SCALA_VERSION.deb && \
+  rm scala-$SCALA_VERSION.deb
 
 # install Groovy
 RUN curl -s http://get.sdkman.io | bash && \
@@ -46,8 +48,10 @@ RUN cabal update && \
 ENV PATH /root/.cabal/bin:$PATH
 
 # install Clojure
-RUN wget -P /opt http://central.maven.org/maven2/org/clojure/clojure/1.7.0/clojure-1.7.0.jar && \
-  echo "java -jar /opt/clojure-1.7.0.jar \$@" > /usr/local/bin/clojure && \
+ENV CLOJURE_VERSION 1.7.0
+
+RUN wget -P /opt http://central.maven.org/maven2/org/clojure/clojure/$CLOJURE_VERSION/clojure-$CLOJURE_VERSION.jar && \
+  echo "java -jar /opt/clojure-$CLOJURE_VERSION.jar \$@" > /usr/local/bin/clojure && \
   chmod +x /usr/local/bin/clojure
 
 # build Joy
@@ -57,11 +61,13 @@ RUN mkdir /var/lib/joy && cd /var/lib/joy && \
   ln -s /var/lib/joy/joy /usr/local/bin
 
 # install Kotlin
-RUN wget https://github.com/JetBrains/kotlin/releases/download/build-1.0.0-beta-2423/kotlin-compiler-1.0.0-beta-2423.zip && \
-  unzip -d /opt kotlin-compiler-1.0.0-beta-2423.zip && \
+ENV KOTLIN_VERSION 1.0.0-beta-2423
+
+RUN wget https://github.com/JetBrains/kotlin/releases/download/build-$KOTLIN_VERSION/kotlin-compiler-$KOTLIN_VERSION.zip && \
+  unzip -d /opt kotlin-compiler-$KOTLIN_VERSION.zip && \
   ln -s /opt/kotlinc/bin/kotlinc /usr/local/bin && \
   ln -s /opt/kotlinc/bin/kotlin /usr/local/bin && \
-  rm kotlin-compiler-1.0.0-beta-2423.zip
+  rm kotlin-compiler-$KOTLIN_VERSION.zip
 
 # install IO
 RUN wget http://iobin.suspended-chord.info/linux/iobin-linux-x64-deb-current.zip && \
@@ -70,10 +76,12 @@ RUN wget http://iobin.suspended-chord.info/linux/iobin-linux-x64-deb-current.zip
   rm -r /io iobin-linux-x64-deb-current.zip
 
 # install Swift
+ENV SWIFT_VERSION 2.2-SNAPSHOT-2015-12-01-b
+
 RUN mkdir -p /opt/swift && \
-  wget https://swift.org/builds/ubuntu1404/swift-2.2-SNAPSHOT-2015-12-01-b/swift-2.2-SNAPSHOT-2015-12-01-b-ubuntu14.04.tar.gz && \
-  tar zxvf swift-2.2-SNAPSHOT-2015-12-01-b-ubuntu14.04.tar.gz -C /opt/swift --strip-components=1 && \
-  rm swift-2.2-SNAPSHOT-2015-12-01-b-ubuntu14.04.tar.gz
+  wget https://swift.org/builds/ubuntu1404/swift-$SWIFT_VERSION/swift-$SWIFT_VERSION-ubuntu14.04.tar.gz && \
+  tar zxvf swift-$SWIFT_VERSION-ubuntu14.04.tar.gz -C /opt/swift --strip-components=1 && \
+  rm swift-$SWIFT_VERSION-ubuntu14.04.tar.gz
 
 ENV PATH /opt/swift/usr/bin:$PATH
 
