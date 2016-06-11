@@ -77,6 +77,15 @@ RUN mkdir -p /opt/swift && \
 
 ENV PATH /opt/swift/usr/bin:$PATH
 
+# install Nim
+ENV NIM_VERSION 0.14.2
+
+RUN mkdir /opt/nim && cd /opt/nim && \
+  wget http://nim-lang.org/download/nim-$NIM_VERSION.tar.xz && \
+  tar xf nim-$NIM_VERSION.tar.xz && rm nim-$NIM_VERSION.tar.xz && \
+  cd nim-$NIM_VERSION && ./build.sh && cd .. \
+  ln -s /opt/nim/nim-$NIM_VERSION/bin/nim /usr/local/bin
+
 # configure Node package
 RUN update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
 

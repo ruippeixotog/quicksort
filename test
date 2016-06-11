@@ -126,6 +126,9 @@ case $1 in
         ;;
   lua) test_suite test1 lua quicksort.lua
        ;;
+  nim) nim c --hints=off --verbosity=0 --nimcache=/tmp/nim quicksort.nim && \
+       test_suite test1 ./quicksort
+       ;;
   pascal) fpc -v0 quicksort.pas && \
           test_suite test1 ./quicksort
           ;;
