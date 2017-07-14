@@ -3,29 +3,31 @@ import Data.Vect.Quantifiers
 
 %default total
 
-data Partition : Nat -> a -> Type where
-  MkPart : Vect p a -> Vect q a -> Partition (p + q) a
+data Partition : Nat -> Nat -> Type where
+  MkPart : Vect p Nat -> Vect q Nat -> Partition (p + q) pivot
 
-partitionP : (a -> Bool) -> Vect len a -> Partition len a
-partitionP pred [] = MkPart [] []
-partitionP pred (x :: xs) =
-  case (pred x, partitionP pred xs) of
-    (True, MkPart inPred notPred) => MkPart (x :: inPred) notPred
-    (False, MkPart {p} {q} inPred notPred) =>
-      rewrite plusSuccRightSucc p q in (MkPart inPred (x :: notPred))
+partitionP : (pivot : Nat) -> Vect len Nat -> Partition len pivot
+partitionP _ [] = MkPart [] []
+partitionP pivot (x :: xs) =
+  case (x < pivot, partitionP pivot xs) of
+    (True, MkPart lts gtes) => MkPart (x :: lts) gtes
+    (False, MkPart {p} {q} lts gtes) =>
+      rewrite plusSuccRightSucc p q in (MkPart lts (x :: gtes))
 
-quicksort : Vect n Int -> Vect n Int
+---
+
+quicksort : Vect n Nat -> Vect n Nat
 quicksort [] = []
-quicksort (pivot :: xs) = case partitionP (< pivot) xs of
+quicksort (pivot :: xs) = case partitionP pivot xs of
   MkPart {p} {q} lower upper =>
     rewrite plusSuccRightSucc p q in
       quicksort (assert_smaller (pivot :: xs) lower) ++ pivot ::
       quicksort (assert_smaller (pivot :: xs) upper)
 
-readIntVect : String -> (n ** Vect n Int)
+readIntVect : String -> (n ** Vect n Nat)
 readIntVect str = (_ ** fromList (map cast (words str)))
 
-showIntVect : Vect n Int -> String
+showIntVect : Vect n Nat -> String
 showIntVect = unwords . toList . (map show)
 
 main : IO ()
