@@ -1,10 +1,12 @@
 import Data.Vect
 import Data.Vect.Quantifiers
 
-data Partition : Nat -> elem -> Type where
-  MkPart : Vect p elem -> Vect q elem -> Partition (p + q) elem
+%default total
 
-partitionP : (elem -> Bool) -> Vect len elem -> Partition len elem
+data Partition : Nat -> a -> Type where
+  MkPart : Vect p a -> Vect q a -> Partition (p + q) a
+
+partitionP : (a -> Bool) -> Vect len a -> Partition len a
 partitionP pred [] = MkPart [] []
 partitionP pred (x :: xs) =
   case (pred x, partitionP pred xs) of
@@ -14,10 +16,11 @@ partitionP pred (x :: xs) =
 
 quicksort : Vect n Int -> Vect n Int
 quicksort [] = []
-quicksort (pivot :: xs) with (partitionP (< pivot) xs)
-  | MkPart {p} {q} lower upper =
-      rewrite plusSuccRightSucc p q in
-        quicksort lower ++ [pivot] ++ quicksort upper
+quicksort (pivot :: xs) = case partitionP (< pivot) xs of
+  MkPart {p} {q} lower upper =>
+    rewrite plusSuccRightSucc p q in
+      quicksort (assert_smaller (pivot :: xs) lower) ++ pivot ::
+      quicksort (assert_smaller (pivot :: xs) upper)
 
 readIntVect : String -> (n ** Vect n Int)
 readIntVect str = (_ ** fromList (map cast (words str)))
