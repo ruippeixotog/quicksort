@@ -37,23 +37,25 @@ data Ordered : List e -> Type where
 
 ||| The contract for a function that correctly partitions a list of numbers into those that are
 ||| smaller than a pivot and those that are not
-data Partition : Nat -> List Nat -> List Nat -> List Nat -> Type where
-  MkPart : (lts : List Nat) -> (gtes : List Nat) ->
-           {auto permPrf : Perm xs (lts ++ gtes)} ->
-           {auto ltPrfs : AllLT lts pivot} -> {auto gtePrfs : AllGTE gtes pivot} ->
-           Partition pivot xs lts gtes
+Partition : Nat -> List Nat -> List Nat -> List Nat -> Type
+Partition pivot xs lts gtes = (Perm xs (lts ++ gtes), AllLT lts pivot, AllGTE gtes pivot)
 
-partitionLtProof : Partition pivot xs lts gtes -> LT x pivot -> Partition pivot (x :: xs) (x :: lts) gtes
-partitionLtProof (MkPart _ _) ltPrf = MkPart _ _
+partitionNilProof : Partition pivot [] [] []
+partitionNilProof = (Empty, Nil, Nil)
 
-partitionNotLtProof : Partition pivot xs lts gtes -> (LT x pivot -> Void) -> Partition pivot (x :: xs) lts (x :: gtes)
-partitionNotLtProof {x} (MkPart _ _ {permPrf}) notLtPrf =
-  let headPermPrf = Insert x permPrf
-      headGtePrf = ifNotLtThenGte notLtPrf in MkPart _ _
+partitionLtProof : Partition pivot xs lts gtes -> LT x pivot ->
+                   Partition pivot (x :: xs) (x :: lts) gtes
+partitionLtProof {x} (xsPerm, ltPrfs, gtPrfs) ltPrf =
+  (SameHead x xsPerm, ltPrf :: ltPrfs, gtPrfs)
+
+partitionNotLtProof : Partition pivot xs lts gtes -> (LT x pivot -> Void) ->
+                      Partition pivot (x :: xs) lts (x :: gtes)
+partitionNotLtProof {x} (xsPerm, ltPrfs, gtPrfs) notLtPrf =
+  (Insert x xsPerm, ltPrfs, ifNotLtThenGte notLtPrf :: gtPrfs)
 
 partitionP : (pivot : Nat) -> (xs : List Nat) ->
              (lts : List Nat ** (gtes : List Nat ** Partition pivot xs lts gtes))
-partitionP pivot [] = ([] ** ([] ** (MkPart _ _)))
+partitionP pivot [] = ([] ** ([] ** partitionNilProof))
 partitionP pivot (x :: xs) with (partitionP pivot xs)
   | (lts ** (gtes ** tailPrf)) = case isLTE (S x) pivot of
       Yes ltPrf => ((x :: lts) ** (gtes ** partitionLtProof tailPrf ltPrf))
@@ -86,8 +88,8 @@ qsortConsOrdProof {xs = x :: x2 :: xs'} (ConsOrdered ltPrf xsRestOrd) ysOrd (_ :
 
 qsortConsProof : Partition pivot xs lts gtes -> Sort lts ltsSrt -> Sort gtes gtesSrt ->
                  Sort (pivot :: xs) (ltsSrt ++ pivot :: gtesSrt)
-qsortConsProof {xs} {pivot} (MkPart _ _ {permPrf} {ltPrfs} {gtePrfs}) (ltsPerm, ltsOrd) (gtesPerm, gtesOrd) =
-  (qsortConsPermProof permPrf ltsPerm gtesPerm,
+qsortConsProof {xs} {pivot} (xsPerm, ltPrfs, gtePrfs) (ltsPerm, ltsOrd) (gtesPerm, gtesOrd) =
+  (qsortConsPermProof xsPerm ltsPerm gtesPerm,
    qsortConsOrdProof ltsOrd gtesOrd (permForall ltPrfs ltsPerm) (permForall gtePrfs gtesPerm))
 
 quicksort : (xs : List Nat) -> (xsSrt : List Nat ** Sort xs xsSrt)
