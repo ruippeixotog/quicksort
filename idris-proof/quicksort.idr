@@ -1,60 +1,92 @@
-import Data.Vect
-import Data.Vect.Quantifiers
+import Data.List.Quantifiers
 
 %default total
 
+||| Proof that a Nat is either less than, equal or greater than another
 data CmpNatP : Nat -> Nat -> Type where
-  CmpLTP : {auto prf : LT a b} -> CmpNatP a b
-  CmpEQP : {auto prf : a = b} -> CmpNatP a b
-  CmpGTP : {auto prf : GT a b} -> CmpNatP a b
+  CmpLTP : LT a b -> CmpNatP a b
+  CmpEQP : a = b -> CmpNatP a b
+  CmpGTP : GT a b -> CmpNatP a b
 
 cmpP : (a : Nat) -> (b : Nat) -> CmpNatP a b
-cmpP Z Z = CmpEQP
-cmpP Z (S k) = CmpLTP
-cmpP (S k) Z = CmpGTP
+cmpP Z Z = CmpEQP Refl
+cmpP Z (S k) = CmpLTP (LTESucc LTEZero)
+cmpP (S k) Z = CmpGTP (LTESucc LTEZero)
 cmpP (S k) (S j) = case cmpP k j of
-  CmpLTP => CmpLTP
-  CmpEQP {prf} => CmpEQP {prf = cong prf}
-  CmpGTP => CmpGTP
+  CmpLTP ltPrf => CmpLTP (LTESucc ltPrf)
+  CmpEQP eqPrf => CmpEQP (cong eqPrf)
+  CmpGTP gtPrf => CmpGTP (LTESucc gtPrf)
 
 ---
 
-data Partition : Nat -> Nat -> Type where
-  MkPart : (lts : Vect p Nat) -> (gtes : Vect q Nat) ->
-           {auto ltPrfs : All (\a => LT a pivot) lts} -> {auto gtePrfs : All (\a => GTE a pivot) gtes} ->
-           Partition (p + q) pivot
-
-partitionP : (pivot : Nat) -> Vect len Nat -> Partition len pivot
-partitionP _ [] = MkPart [] []
-partitionP pivot (x :: xs) =
-  case (cmpP x pivot, partitionP pivot xs) of
-    (CmpLTP, MkPart lts gtes) => MkPart (x :: lts) gtes
-    (CmpEQP {prf = Refl}, MkPart {p} {q} lts gtes {gtePrfs}) =>
-      rewrite plusSuccRightSucc p q in
-        MkPart lts (x :: gtes) {gtePrfs = lteRefl :: gtePrfs}
-    (CmpGTP {prf}, MkPart {p} {q} lts gtes {gtePrfs}) =>
-      rewrite plusSuccRightSucc p q in
-        MkPart lts (x :: gtes) {gtePrfs = lteSuccLeft prf :: gtePrfs}
+||| Proof that a list is a permutation of another
+data Perm : List e -> List e -> Type where
+  Empty : Perm [] []
+  SameHead : (x : e) -> Perm xs ys -> Perm (x :: xs) (x :: ys)
+  Compose : Perm xs ys -> Perm ys zs -> Perm xs zs
+  Insert : (x : e) -> Perm xs (ys ++ zs) -> Perm (x :: xs) (ys ++ x :: zs)
+  Cat : Perm xs zs -> Perm ys ws -> Perm (xs ++ ys) (zs ++ ws)
 
 ---
 
-quicksort : Vect n Nat -> Vect n Nat
-quicksort [] = []
+AllLT : List Nat -> Nat -> Type
+AllLT xs pivot = All (\a => LT a pivot) xs
+
+AllGTE : List Nat -> Nat -> Type
+AllGTE xs pivot = All (\a => GTE a pivot) xs
+
+||| The contract for a function that correctly partitions a list of numbers into those that are
+||| smaller than a pivot and those that are not
+data Partition : Nat -> List Nat -> List Nat -> List Nat -> Type where
+  MkPart : (lts : List Nat) -> (gtes : List Nat) ->
+           {auto permPrf : Perm xs (lts ++ gtes)} ->
+           {auto ltPrfs : AllLT lts pivot} -> {auto gtePrfs : AllGTE gtes pivot} ->
+           Partition pivot xs lts gtes
+
+partitionLtProof : Partition pivot xs lts gtes -> LT x pivot -> Partition pivot (x :: xs) (x :: lts) gtes
+partitionLtProof (MkPart _ _) ltPrf = MkPart _ _
+
+partitionEqProof : Partition pivot xs lts gtes -> x = pivot -> Partition pivot (x :: xs) lts (x :: gtes)
+partitionEqProof {x} (MkPart _ _ {permPrf} {gtePrfs}) Refl =
+  let headPermPrf = Insert x permPrf
+      consGtePrf = lteRefl :: gtePrfs in MkPart _ _
+
+partitionGtProof : Partition pivot xs lts gtes -> GT x pivot -> Partition pivot (x :: xs) lts (x :: gtes)
+partitionGtProof {x} (MkPart _ _ {permPrf}) gtPrf =
+  let headPermPrf = Insert x permPrf
+      headGtePrf = lteSuccLeft gtPrf in MkPart _ _
+
+partitionP : (pivot : Nat) -> (xs : List Nat) ->
+             (lts : List Nat ** (gtes : List Nat ** Partition pivot xs lts gtes))
+partitionP pivot [] = ([] ** ([] ** (MkPart _ _)))
+partitionP pivot (x :: xs) = case (cmpP x pivot, partitionP pivot xs) of
+  (CmpLTP ltPrf, (lts ** (gtes ** tailPrf))) => ((x :: lts) ** (gtes ** partitionLtProof tailPrf ltPrf))
+  (CmpEQP eqPrf, (lts ** (gtes ** tailPrf))) => (lts ** ((x :: gtes) ** partitionEqProof tailPrf eqPrf))
+  (CmpGTP gtPrf, (lts ** (gtes ** tailPrf))) => (lts ** ((x :: gtes) ** partitionGtProof tailPrf gtPrf))
+
+---
+
+||| The contract for a function that correctly sorts a list
+Sort : List Nat -> List Nat -> Type
+Sort xs xsSorted = Perm xs xsSorted -- TODO check for ordering
+
+quicksortProof : Partition pivot xs lts gtes -> Sort lts ltsSrt -> Sort gtes gtesSrt ->
+                 Sort (pivot :: xs) (ltsSrt ++ pivot :: gtesSrt)
+quicksortProof {xs} {pivot} (MkPart _ _ {permPrf}) ltsPerm gtesPerm =
+  Insert pivot (Compose permPrf (Cat ltsPerm gtesPerm))
+
+quicksort : (xs : List Nat) -> (xsSrt : List Nat ** Sort xs xsSrt)
+quicksort [] = ([] ** Empty)
 quicksort (pivot :: xs) = case partitionP pivot xs of
-  MkPart {p} {q} lower upper =>
-    rewrite plusSuccRightSucc p q in
-      quicksort (assert_smaller (pivot :: xs) lower) ++ pivot ::
-      quicksort (assert_smaller (pivot :: xs) upper)
+  (lts ** (gtes ** partPrf)) =>
+    let (ltsSrt ** ltsSrtPrf) = quicksort (assert_smaller (pivot :: xs) lts)
+        (gtesSrt ** gtesSrtPrf) = quicksort (assert_smaller (pivot :: xs) gtes) in
+          (ltsSrt ++ pivot :: gtesSrt ** quicksortProof partPrf ltsSrtPrf gtesSrtPrf)
 
-readIntVect : String -> (n ** Vect n Nat)
-readIntVect str = (_ ** fromList (map cast (words str)))
-
-showIntVect : Vect n Nat -> String
-showIntVect = unwords . toList . (map show)
+---
 
 main : IO ()
 main = do n <- getLine
-          arrStr <- getLine
-          let (_ ** arr) = readIntVect arrStr
-          let sorted = quicksort arr
-          putStrLn (showIntVect sorted)
+          arr <- getLine
+          let (sorted ** _) = quicksort (map cast (words arr))
+          putStrLn (unwords (map show sorted))
