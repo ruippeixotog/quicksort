@@ -9,6 +9,12 @@ ifNotLtThenGte {a = Z} {b = (S k)} notLt = absurd (notLt (LTESucc LTEZero))
 ifNotLtThenGte {a = (S k)} {b = Z} _ = LTEZero
 ifNotLtThenGte {a = (S k)} {b = (S j)} notLt = LTESucc (ifNotLtThenGte (notLt . LTESucc))
 
+AllLT : List Nat -> Nat -> Type
+AllLT xs pivot = All (\a => LT a pivot) xs
+
+AllGTE : List Nat -> Nat -> Type
+AllGTE xs pivot = All (\a => GTE a pivot) xs
+
 ---
 
 ||| Proof that a list is a permutation of another
@@ -18,14 +24,16 @@ data Perm : List e -> List e -> Type where
   Compose : Perm xs ys -> Perm ys zs -> Perm xs zs
   Insert : (x : e) -> Perm xs (ys ++ zs) -> Perm (x :: xs) (ys ++ x :: zs)
   Cat : Perm xs zs -> Perm ys ws -> Perm (xs ++ ys) (zs ++ ws)
+-- TODO remove redundant constructors
+
+permForall : All p xs -> Perm xs ys -> All p ys
+
+data Ordered : List e -> Type where
+  EmptyOrdered : Ordered []
+  SingletonOrdered : Ordered [x]
+  ConsOrdered : LTE x x2 -> Ordered (x2 :: xs) -> Ordered (x :: x2 :: xs)
 
 ---
-
-AllLT : List Nat -> Nat -> Type
-AllLT xs pivot = All (\a => LT a pivot) xs
-
-AllGTE : List Nat -> Nat -> Type
-AllGTE xs pivot = All (\a => GTE a pivot) xs
 
 ||| The contract for a function that correctly partitions a list of numbers into those that are
 ||| smaller than a pivot and those that are not
@@ -55,20 +63,40 @@ partitionP pivot (x :: xs) with (partitionP pivot xs)
 
 ||| The contract for a function that correctly sorts a list
 Sort : List Nat -> List Nat -> Type
-Sort xs xsSorted = Perm xs xsSorted -- TODO check for ordering
+Sort xs xsSorted = (Perm xs xsSorted, Ordered xsSorted)
 
-quicksortProof : Partition pivot xs lts gtes -> Sort lts ltsSrt -> Sort gtes gtesSrt ->
-                 Sort (pivot :: xs) (ltsSrt ++ pivot :: gtesSrt)
-quicksortProof {xs} {pivot} (MkPart _ _ {permPrf}) ltsPerm gtesPerm =
+qsortNilProof : Sort [] []
+qsortNilProof = (Empty, EmptyOrdered)
+
+qsortConsPermProof : Perm xs (lts ++ gtes) -> Perm lts ltsSrt -> Perm gtes gtesSrt ->
+                     Perm (pivot :: xs) (ltsSrt ++ pivot :: gtesSrt)
+qsortConsPermProof {pivot} permPrf ltsPerm gtesPerm =
   Insert pivot (Compose permPrf (Cat ltsPerm gtesPerm))
 
+qsortConsOrdProof : Ordered xs -> Ordered ys -> AllLT xs pivot -> AllGTE ys pivot ->
+                    Ordered (xs ++ pivot :: ys)
+qsortConsOrdProof {xs = []} {ys = []} _ _ _ _ = SingletonOrdered
+qsortConsOrdProof {xs = []} {ys = y :: ys'} _ ysOrd _ (gtePrf :: _) = ConsOrdered gtePrf ysOrd
+qsortConsOrdProof {xs = x :: []} _ ysOrd (ltPrf :: Nil) ysGte =
+  let restOrd = qsortConsOrdProof EmptyOrdered ysOrd Nil ysGte in
+    ConsOrdered (lteSuccLeft ltPrf) restOrd
+qsortConsOrdProof {xs = x :: x2 :: xs'} (ConsOrdered ltPrf xsRestOrd) ysOrd (_ :: xsRestLt) ysGte =
+  let restOrd = qsortConsOrdProof xsRestOrd ysOrd xsRestLt ysGte in
+    ConsOrdered ltPrf restOrd
+
+qsortConsProof : Partition pivot xs lts gtes -> Sort lts ltsSrt -> Sort gtes gtesSrt ->
+                 Sort (pivot :: xs) (ltsSrt ++ pivot :: gtesSrt)
+qsortConsProof {xs} {pivot} (MkPart _ _ {permPrf} {ltPrfs} {gtePrfs}) (ltsPerm, ltsOrd) (gtesPerm, gtesOrd) =
+  (qsortConsPermProof permPrf ltsPerm gtesPerm,
+   qsortConsOrdProof ltsOrd gtesOrd (permForall ltPrfs ltsPerm) (permForall gtePrfs gtesPerm))
+
 quicksort : (xs : List Nat) -> (xsSrt : List Nat ** Sort xs xsSrt)
-quicksort [] = ([] ** Empty)
+quicksort [] = ([] ** qsortNilProof)
 quicksort (pivot :: xs) = case partitionP pivot xs of
   (lts ** (gtes ** partPrf)) =>
     let (ltsSrt ** ltsSrtPrf) = quicksort (assert_smaller (pivot :: xs) lts)
         (gtesSrt ** gtesSrtPrf) = quicksort (assert_smaller (pivot :: xs) gtes) in
-          (ltsSrt ++ pivot :: gtesSrt ** quicksortProof partPrf ltsSrtPrf gtesSrtPrf)
+          (ltsSrt ++ pivot :: gtesSrt ** qsortConsProof partPrf ltsSrtPrf gtesSrtPrf)
 
 ---
 
