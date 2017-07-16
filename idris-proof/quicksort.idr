@@ -2,20 +2,12 @@ import Data.List.Quantifiers
 
 %default total
 
-||| Proof that a Nat is either less than, equal or greater than another
-data CmpNatP : Nat -> Nat -> Type where
-  CmpLTP : LT a b -> CmpNatP a b
-  CmpEQP : a = b -> CmpNatP a b
-  CmpGTP : GT a b -> CmpNatP a b
-
-cmpP : (a : Nat) -> (b : Nat) -> CmpNatP a b
-cmpP Z Z = CmpEQP Refl
-cmpP Z (S k) = CmpLTP (LTESucc LTEZero)
-cmpP (S k) Z = CmpGTP (LTESucc LTEZero)
-cmpP (S k) (S j) = case cmpP k j of
-  CmpLTP ltPrf => CmpLTP (LTESucc ltPrf)
-  CmpEQP eqPrf => CmpEQP (cong eqPrf)
-  CmpGTP gtPrf => CmpGTP (LTESucc gtPrf)
+||| Proof that if a number is not less than another, it is greater than or equal to it
+ifNotLtThenGte : (LT a b -> Void) -> GTE a b
+ifNotLtThenGte {a = Z} {b = Z} _ = lteRefl
+ifNotLtThenGte {a = Z} {b = (S k)} notLt = absurd (notLt (LTESucc LTEZero))
+ifNotLtThenGte {a = (S k)} {b = Z} _ = LTEZero
+ifNotLtThenGte {a = (S k)} {b = (S j)} notLt = LTESucc (ifNotLtThenGte (notLt . LTESucc))
 
 ---
 
@@ -46,23 +38,18 @@ data Partition : Nat -> List Nat -> List Nat -> List Nat -> Type where
 partitionLtProof : Partition pivot xs lts gtes -> LT x pivot -> Partition pivot (x :: xs) (x :: lts) gtes
 partitionLtProof (MkPart _ _) ltPrf = MkPart _ _
 
-partitionEqProof : Partition pivot xs lts gtes -> x = pivot -> Partition pivot (x :: xs) lts (x :: gtes)
-partitionEqProof {x} (MkPart _ _ {permPrf} {gtePrfs}) Refl =
+partitionNotLtProof : Partition pivot xs lts gtes -> (LT x pivot -> Void) -> Partition pivot (x :: xs) lts (x :: gtes)
+partitionNotLtProof {x} (MkPart _ _ {permPrf}) notLtPrf =
   let headPermPrf = Insert x permPrf
-      consGtePrf = lteRefl :: gtePrfs in MkPart _ _
-
-partitionGtProof : Partition pivot xs lts gtes -> GT x pivot -> Partition pivot (x :: xs) lts (x :: gtes)
-partitionGtProof {x} (MkPart _ _ {permPrf}) gtPrf =
-  let headPermPrf = Insert x permPrf
-      headGtePrf = lteSuccLeft gtPrf in MkPart _ _
+      headGtePrf = ifNotLtThenGte notLtPrf in MkPart _ _
 
 partitionP : (pivot : Nat) -> (xs : List Nat) ->
              (lts : List Nat ** (gtes : List Nat ** Partition pivot xs lts gtes))
 partitionP pivot [] = ([] ** ([] ** (MkPart _ _)))
-partitionP pivot (x :: xs) = case (cmpP x pivot, partitionP pivot xs) of
-  (CmpLTP ltPrf, (lts ** (gtes ** tailPrf))) => ((x :: lts) ** (gtes ** partitionLtProof tailPrf ltPrf))
-  (CmpEQP eqPrf, (lts ** (gtes ** tailPrf))) => (lts ** ((x :: gtes) ** partitionEqProof tailPrf eqPrf))
-  (CmpGTP gtPrf, (lts ** (gtes ** tailPrf))) => (lts ** ((x :: gtes) ** partitionGtProof tailPrf gtPrf))
+partitionP pivot (x :: xs) with (partitionP pivot xs)
+  | (lts ** (gtes ** tailPrf)) = case isLTE (S x) pivot of
+      Yes ltPrf => ((x :: lts) ** (gtes ** partitionLtProof tailPrf ltPrf))
+      No notLtPrf => (lts ** ((x :: gtes) ** partitionNotLtProof tailPrf notLtPrf))
 
 ---
 
