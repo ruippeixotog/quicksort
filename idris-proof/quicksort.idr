@@ -40,40 +40,40 @@ eqPlusSwap (There ep1) (There ep2) with (eqPlusSwap ep1 ep2)
 
 ||| Proof that a list is a permutation of another
 data Perm : List e -> List e -> Type where
-  Empty : Perm [] []
-  Insert : EqPlus x ys xys -> Perm xs ys -> Perm (x :: xs) xys
+  PEmpty : Perm [] []
+  PInsert : EqPlus x ys xys -> Perm xs ys -> Perm (x :: xs) xys
 
 permComposeView : EqPlus x ys' ys -> Perm ys zs -> (zs' ** (EqPlus x zs' zs, Perm ys' zs'))
-permComposeView Here (Insert ep perm) = (_ ** (ep, perm))
-permComposeView (There ep1) (Insert ep2 perm) with (permComposeView ep1 perm)
+permComposeView Here (PInsert ep perm) = (_ ** (ep, perm))
+permComposeView (There ep1) (PInsert ep2 perm) with (permComposeView ep1 perm)
   | (_ ** (ep1', perm')) with (eqPlusSwap ep1' ep2)
-    | (_ ** (ep1'', ep2'')) = (_ ** (ep2'', Insert ep1'' perm'))
+    | (_ ** (ep1'', ep2'')) = (_ ** (ep2'', PInsert ep1'' perm'))
 
 permCompose : Perm xs ys -> Perm ys zs -> Perm xs zs
-permCompose perm Empty = perm
-permCompose (Insert epX permXs) permYZ with (permComposeView epX permYZ)
-  | (_ ** (q, qs)) = Insert q (permCompose permXs qs)
+permCompose perm PEmpty = perm
+permCompose (PInsert epX permXs) permYZ with (permComposeView epX permYZ)
+  | (_ ** (q, qs)) = PInsert q (permCompose permXs qs)
 
 permCat : Perm xs zs -> Perm ys ws -> Perm (xs ++ ys) (zs ++ ws)
-permCat Empty perm = perm
-permCat (Insert ep perm1) perm2 with (permCat perm1 perm2)
-  | perm' = Insert (eqPlusCat ep) perm'
+permCat PEmpty perm = perm
+permCat (PInsert ep perm1) perm2 with (permCat perm1 perm2)
+  | perm' = PInsert (eqPlusCat ep) perm'
 
 forallPermInsert : EqPlus x ys xys -> p x -> All p ys -> All p xys
 forallPermInsert Here px pys = px :: pys
 forallPermInsert (There ep) px (py :: pys) = py :: forallPermInsert ep px pys
 
 forallPerm : All p xs -> Perm xs ys -> All p ys
-forallPerm [] Empty = []
-forallPerm (px :: pxs) (Insert ep perm) with (forallPerm pxs perm)
+forallPerm [] PEmpty = []
+forallPerm (px :: pxs) (PInsert ep perm) with (forallPerm pxs perm)
   | pxs' = forallPermInsert ep px pxs'
 
 ---
 
-data Ordered : List e -> Type where
-  EmptyOrdered : Ordered []
-  SingletonOrdered : Ordered [x]
-  ConsOrdered : LTE x x2 -> Ordered (x2 :: xs) -> Ordered (x :: x2 :: xs)
+data Sorted : List e -> Type where
+  SEmpty : Sorted []
+  SSingleton : Sorted [x]
+  SCons : LTE x x2 -> Sorted (x2 :: xs) -> Sorted (x :: x2 :: xs)
 
 ---
 
@@ -83,17 +83,17 @@ Partition : Nat -> List Nat -> List Nat -> List Nat -> Type
 Partition pivot xs lts gtes = (Perm xs (lts ++ gtes), AllLT lts pivot, AllGTE gtes pivot)
 
 partitionNilProof : Partition pivot [] [] []
-partitionNilProof = (Empty, Nil, Nil)
+partitionNilProof = (PEmpty, Nil, Nil)
 
 partitionLtProof : Partition pivot xs lts gtes -> LT x pivot ->
                    Partition pivot (x :: xs) (x :: lts) gtes
 partitionLtProof {x} (xsPerm, ltPrfs, gtPrfs) ltPrf =
-  (Insert Here xsPerm, ltPrf :: ltPrfs, gtPrfs)
+  (PInsert Here xsPerm, ltPrf :: ltPrfs, gtPrfs)
 
 partitionNotLtProof : Partition pivot xs lts gtes -> (LT x pivot -> Void) ->
                       Partition pivot (x :: xs) lts (x :: gtes)
 partitionNotLtProof {x} (xsPerm, ltPrfs, gtPrfs) notLtPrf =
-  (Insert eqPlusInsert xsPerm, ltPrfs, ifNotLtThenGte notLtPrf :: gtPrfs)
+  (PInsert eqPlusInsert xsPerm, ltPrfs, ifNotLtThenGte notLtPrf :: gtPrfs)
 
 partitionP : (pivot : Nat) -> (xs : List Nat) ->
              (lts : List Nat ** (gtes : List Nat ** Partition pivot xs lts gtes))
@@ -107,26 +107,26 @@ partitionP pivot (x :: xs) with (partitionP pivot xs)
 
 ||| The contract for a function that correctly sorts a list
 Sort : List Nat -> List Nat -> Type
-Sort xs xsSorted = (Perm xs xsSorted, Ordered xsSorted)
+Sort xs xsSorted = (Perm xs xsSorted, Sorted xsSorted)
 
 qsortNilProof : Sort [] []
-qsortNilProof = (Empty, EmptyOrdered)
+qsortNilProof = (PEmpty, SEmpty)
 
 qsortConsPermProof : Perm xs (lts ++ gtes) -> Perm lts ltsSrt -> Perm gtes gtesSrt ->
                      Perm (pivot :: xs) (ltsSrt ++ pivot :: gtesSrt)
 qsortConsPermProof permPrf ltsPerm gtesPerm =
-  Insert eqPlusInsert (permCompose permPrf (permCat ltsPerm gtesPerm))
+  PInsert eqPlusInsert (permCompose permPrf (permCat ltsPerm gtesPerm))
 
-qsortConsOrdProof : Ordered xs -> Ordered ys -> AllLT xs pivot -> AllGTE ys pivot ->
-                    Ordered (xs ++ pivot :: ys)
-qsortConsOrdProof {xs = []} {ys = []} _ _ _ _ = SingletonOrdered
-qsortConsOrdProof {xs = []} {ys = y :: ys'} _ ysOrd _ (gtePrf :: _) = ConsOrdered gtePrf ysOrd
+qsortConsOrdProof : Sorted xs -> Sorted ys -> AllLT xs pivot -> AllGTE ys pivot ->
+                    Sorted (xs ++ pivot :: ys)
+qsortConsOrdProof {xs = []} {ys = []} _ _ _ _ = SSingleton
+qsortConsOrdProof {xs = []} {ys = y :: ys'} _ ysOrd _ (gtePrf :: _) = SCons gtePrf ysOrd
 qsortConsOrdProof {xs = x :: []} _ ysOrd (ltPrf :: Nil) ysGte =
-  let restOrd = qsortConsOrdProof EmptyOrdered ysOrd Nil ysGte in
-    ConsOrdered (lteSuccLeft ltPrf) restOrd
-qsortConsOrdProof {xs = x :: x2 :: xs'} (ConsOrdered ltPrf xsRestOrd) ysOrd (_ :: xsRestLt) ysGte =
+  let restOrd = qsortConsOrdProof SEmpty ysOrd Nil ysGte in
+    SCons (lteSuccLeft ltPrf) restOrd
+qsortConsOrdProof {xs = x :: x2 :: xs'} (SCons ltPrf xsRestOrd) ysOrd (_ :: xsRestLt) ysGte =
   let restOrd = qsortConsOrdProof xsRestOrd ysOrd xsRestLt ysGte in
-    ConsOrdered ltPrf restOrd
+    SCons ltPrf restOrd
 
 qsortConsProof : Partition pivot xs lts gtes -> Sort lts ltsSrt -> Sort gtes gtesSrt ->
                  Sort (pivot :: xs) (ltsSrt ++ pivot :: gtesSrt)
