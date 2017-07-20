@@ -2,34 +2,32 @@ import Data.List.Quantifiers
 
 %default total
 
-||| Proof that if a number is not less than another, it is greater than or equal to it
+||| Proof that if a number is not less than another, it is greater than or equal to it.
 ifNotLtThenGte : (LT a b -> Void) -> GTE a b
 ifNotLtThenGte {a = Z} {b = Z} _ = lteRefl
 ifNotLtThenGte {a = Z} {b = (S k)} notLt = absurd (notLt (LTESucc LTEZero))
 ifNotLtThenGte {a = (S k)} {b = Z} _ = LTEZero
 ifNotLtThenGte {a = (S k)} {b = (S j)} notLt = LTESucc (ifNotLtThenGte (notLt . LTESucc))
 
-AllLT : List Nat -> Nat -> Type
-AllLT xs pivot = All (\a => LT a pivot) xs
-
-AllGTE : List Nat -> Nat -> Type
-AllGTE xs pivot = All (\a => GTE a pivot) xs
-
 ---
 
-||| Proof that a list is equal to another with an element inserted somewhere
+||| Proof that a list is equal to another with an element inserted somewhere.
 data EqPlus : e -> List e -> List e -> Type where
   Here : EqPlus x xs (x :: xs)
   There : EqPlus x xs xys -> EqPlus x (y :: xs) (y :: xys)
 
+||| Given any ys and zs, (ys ++ x :: zs) is equal to (ys ++ zs) with x inserted.
 eqPlusInsert : EqPlus x (ys ++ zs) (ys ++ x :: zs)
 eqPlusInsert {ys = []} = Here
 eqPlusInsert {ys = y :: ys'} = There eqPlusInsert
 
+||| Appending a list to both sides of an EqPlus is still an EqPlus.
 eqPlusCat : EqPlus x xs xxs -> EqPlus x (xs ++ ys) (xxs ++ ys)
 eqPlusCat Here = Here
 eqPlusCat (There ep) = There (eqPlusCat ep)
 
+||| If yxxs results of inserting x followed by y into xs, adding first y and then x into xs still
+||| results in yxxs.
 eqPlusSwap : EqPlus x xs xxs -> EqPlus y xxs yxxs -> (yxs ** (EqPlus y xs yxs, EqPlus x yxs yxxs))
 eqPlusSwap ep Here = (_ ** (Here, There ep))
 eqPlusSwap Here (There ep) = (_ ** (ep, Here))
@@ -38,7 +36,7 @@ eqPlusSwap (There ep1) (There ep2) with (eqPlusSwap ep1 ep2)
 
 ---
 
-||| Proof that a list is a permutation of another
+||| Proof that a list is a permutation of another.
 data Perm : List e -> List e -> Type where
   PEmpty : Perm [] []
   PInsert : EqPlus x ys xys -> Perm xs ys -> Perm (x :: xs) xys
@@ -49,27 +47,33 @@ permComposeView (There ep1) (PInsert ep2 perm) with (permComposeView ep1 perm)
   | (_ ** (ep1', perm')) with (eqPlusSwap ep1' ep2)
     | (_ ** (ep1'', ep2'')) = (_ ** (ep2'', PInsert ep1'' perm'))
 
+||| Permutations are composable.
 permCompose : Perm xs ys -> Perm ys zs -> Perm xs zs
 permCompose perm PEmpty = perm
 permCompose (PInsert epX permXs) permYZ with (permComposeView epX permYZ)
   | (_ ** (q, qs)) = PInsert q (permCompose permXs qs)
 
+||| Permutations can be concatenated.
 permCat : Perm xs zs -> Perm ys ws -> Perm (xs ++ ys) (zs ++ ws)
 permCat PEmpty perm = perm
 permCat (PInsert ep perm1) perm2 with (permCat perm1 perm2)
   | perm' = PInsert (eqPlusCat ep) perm'
 
-forallPermInsert : EqPlus x ys xys -> p x -> All p ys -> All p xys
-forallPermInsert Here px pys = px :: pys
-forallPermInsert (There ep) px (py :: pys) = py :: forallPermInsert ep px pys
+||| If xys is ys with x inserted, given proofs for x and for all elements of ys, there is a proof
+||| for all elements of xys.
+forallEqPlusInsert : EqPlus x ys xys -> p x -> All p ys -> All p xys
+forallEqPlusInsert Here px pys = px :: pys
+forallEqPlusInsert (There ep) px (py :: pys) = py :: forallEqPlusInsert ep px pys
 
+||| Proofs for all elements of xs are also proofs for all elements of a permutation of xs.
 forallPerm : All p xs -> Perm xs ys -> All p ys
 forallPerm [] PEmpty = []
 forallPerm (px :: pxs) (PInsert ep perm) with (forallPerm pxs perm)
-  | pxs' = forallPermInsert ep px pxs'
+  | pxs' = forallEqPlusInsert ep px pxs'
 
 ---
 
+||| Proof that a list is sorted.
 data Sorted : List e -> Type where
   SEmpty : Sorted []
   SSingleton : Sorted [x]
@@ -77,8 +81,14 @@ data Sorted : List e -> Type where
 
 ---
 
+AllLT : List Nat -> Nat -> Type
+AllLT xs pivot = All (\a => LT a pivot) xs
+
+AllGTE : List Nat -> Nat -> Type
+AllGTE xs pivot = All (\a => GTE a pivot) xs
+
 ||| The contract for a function that correctly partitions a list of numbers into those that are
-||| smaller than a pivot and those that are not
+||| smaller than a pivot and those that are not.
 Partition : Nat -> List Nat -> List Nat -> List Nat -> Type
 Partition pivot xs lts gtes = (Perm xs (lts ++ gtes), AllLT lts pivot, AllGTE gtes pivot)
 
@@ -105,7 +115,7 @@ partitionP pivot (x :: xs) with (partitionP pivot xs)
 
 ---
 
-||| The contract for a function that correctly sorts a list
+||| The contract for a function that correctly sorts a list.
 Sort : List Nat -> List Nat -> Type
 Sort xs xsSorted = (Perm xs xsSorted, Sorted xsSorted)
 
