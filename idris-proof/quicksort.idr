@@ -17,14 +17,47 @@ AllGTE xs pivot = All (\a => GTE a pivot) xs
 
 ---
 
+||| Proof that a list is equal to another with an element inserted somewhere
+data EqPlus : e -> List e -> List e -> Type where
+  Here : EqPlus x xs (x :: xs)
+  There : EqPlus x xs xys -> EqPlus x (y :: xs) (y :: xys)
+
+eqPlusInsert : EqPlus x (ys ++ zs) (ys ++ x :: zs)
+eqPlusInsert {ys = []} = Here
+eqPlusInsert {ys = y :: ys'} = There eqPlusInsert
+
+eqPlusCat : EqPlus x xs xxs -> EqPlus x (xs ++ ys) (xxs ++ ys)
+eqPlusCat Here = Here
+eqPlusCat (There ep) = There (eqPlusCat ep)
+
+eqPlusSwap : EqPlus x xs xxs -> EqPlus y xxs yxxs -> (yxs ** (EqPlus y xs yxs, EqPlus x yxs yxxs))
+eqPlusSwap ep Here = (_ ** (Here, There ep))
+eqPlusSwap Here (There ep) = (_ ** (ep, Here))
+eqPlusSwap (There ep1) (There ep2) with (eqPlusSwap ep1 ep2)
+  | (_ ** (ep1', ep2')) = (_ ** (There ep1', There ep2'))
+
+---
+
 ||| Proof that a list is a permutation of another
 data Perm : List e -> List e -> Type where
   Empty : Perm [] []
-  SameHead : (x : e) -> Perm xs ys -> Perm (x :: xs) (x :: ys)
-  Compose : Perm xs ys -> Perm ys zs -> Perm xs zs
-  Insert : (x : e) -> Perm xs (ys ++ zs) -> Perm (x :: xs) (ys ++ x :: zs)
-  Cat : Perm xs zs -> Perm ys ws -> Perm (xs ++ ys) (zs ++ ws)
--- TODO remove redundant constructors
+  Insert : EqPlus x ys xys -> Perm xs ys -> Perm (x :: xs) xys
+
+permComposeView : EqPlus x ys' ys -> Perm ys zs -> (zs' ** (EqPlus x zs' zs, Perm ys' zs'))
+permComposeView Here (Insert ep perm) = (_ ** (ep, perm))
+permComposeView (There ep1) (Insert ep2 perm) with (permComposeView ep1 perm)
+  | (_ ** (ep1', perm')) with (eqPlusSwap ep1' ep2)
+    | (_ ** (ep1'', ep2'')) = (_ ** (ep2'', Insert ep1'' perm'))
+
+permCompose : Perm xs ys -> Perm ys zs -> Perm xs zs
+permCompose perm Empty = perm
+permCompose (Insert epX permXs) permYZ with (permComposeView epX permYZ)
+  | (_ ** (q, qs)) = Insert q (permCompose permXs qs)
+
+permCat : Perm xs zs -> Perm ys ws -> Perm (xs ++ ys) (zs ++ ws)
+permCat Empty perm = perm
+permCat (Insert ep perm1) perm2 with (permCat perm1 perm2)
+  | perm' = Insert (eqPlusCat ep) perm'
 
 permForall : All p xs -> Perm xs ys -> All p ys
 
@@ -46,12 +79,12 @@ partitionNilProof = (Empty, Nil, Nil)
 partitionLtProof : Partition pivot xs lts gtes -> LT x pivot ->
                    Partition pivot (x :: xs) (x :: lts) gtes
 partitionLtProof {x} (xsPerm, ltPrfs, gtPrfs) ltPrf =
-  (SameHead x xsPerm, ltPrf :: ltPrfs, gtPrfs)
+  (Insert Here xsPerm, ltPrf :: ltPrfs, gtPrfs)
 
 partitionNotLtProof : Partition pivot xs lts gtes -> (LT x pivot -> Void) ->
                       Partition pivot (x :: xs) lts (x :: gtes)
 partitionNotLtProof {x} (xsPerm, ltPrfs, gtPrfs) notLtPrf =
-  (Insert x xsPerm, ltPrfs, ifNotLtThenGte notLtPrf :: gtPrfs)
+  (Insert eqPlusInsert xsPerm, ltPrfs, ifNotLtThenGte notLtPrf :: gtPrfs)
 
 partitionP : (pivot : Nat) -> (xs : List Nat) ->
              (lts : List Nat ** (gtes : List Nat ** Partition pivot xs lts gtes))
@@ -72,8 +105,8 @@ qsortNilProof = (Empty, EmptyOrdered)
 
 qsortConsPermProof : Perm xs (lts ++ gtes) -> Perm lts ltsSrt -> Perm gtes gtesSrt ->
                      Perm (pivot :: xs) (ltsSrt ++ pivot :: gtesSrt)
-qsortConsPermProof {pivot} permPrf ltsPerm gtesPerm =
-  Insert pivot (Compose permPrf (Cat ltsPerm gtesPerm))
+qsortConsPermProof permPrf ltsPerm gtesPerm =
+  Insert eqPlusInsert (permCompose permPrf (permCat ltsPerm gtesPerm))
 
 qsortConsOrdProof : Ordered xs -> Ordered ys -> AllLT xs pivot -> AllGTE ys pivot ->
                     Ordered (xs ++ pivot :: ys)
@@ -88,7 +121,7 @@ qsortConsOrdProof {xs = x :: x2 :: xs'} (ConsOrdered ltPrf xsRestOrd) ysOrd (_ :
 
 qsortConsProof : Partition pivot xs lts gtes -> Sort lts ltsSrt -> Sort gtes gtesSrt ->
                  Sort (pivot :: xs) (ltsSrt ++ pivot :: gtesSrt)
-qsortConsProof {xs} {pivot} (xsPerm, ltPrfs, gtePrfs) (ltsPerm, ltsOrd) (gtesPerm, gtesOrd) =
+qsortConsProof (xsPerm, ltPrfs, gtePrfs) (ltsPerm, ltsOrd) (gtesPerm, gtesOrd) =
   (qsortConsPermProof xsPerm ltsPerm gtesPerm,
    qsortConsOrdProof ltsOrd gtesOrd (permForall ltPrfs ltsPerm) (permForall gtePrfs gtesPerm))
 
