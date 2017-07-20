@@ -59,7 +59,16 @@ permCat Empty perm = perm
 permCat (Insert ep perm1) perm2 with (permCat perm1 perm2)
   | perm' = Insert (eqPlusCat ep) perm'
 
-permForall : All p xs -> Perm xs ys -> All p ys
+forallPermInsert : EqPlus x ys xys -> p x -> All p ys -> All p xys
+forallPermInsert Here px pys = px :: pys
+forallPermInsert (There ep) px (py :: pys) = py :: forallPermInsert ep px pys
+
+forallPerm : All p xs -> Perm xs ys -> All p ys
+forallPerm [] Empty = []
+forallPerm (px :: pxs) (Insert ep perm) with (forallPerm pxs perm)
+  | pxs' = forallPermInsert ep px pxs'
+
+---
 
 data Ordered : List e -> Type where
   EmptyOrdered : Ordered []
@@ -123,7 +132,7 @@ qsortConsProof : Partition pivot xs lts gtes -> Sort lts ltsSrt -> Sort gtes gte
                  Sort (pivot :: xs) (ltsSrt ++ pivot :: gtesSrt)
 qsortConsProof (xsPerm, ltPrfs, gtePrfs) (ltsPerm, ltsOrd) (gtesPerm, gtesOrd) =
   (qsortConsPermProof xsPerm ltsPerm gtesPerm,
-   qsortConsOrdProof ltsOrd gtesOrd (permForall ltPrfs ltsPerm) (permForall gtePrfs gtesPerm))
+   qsortConsOrdProof ltsOrd gtesOrd (forallPerm ltPrfs ltsPerm) (forallPerm gtePrfs gtesPerm))
 
 quicksort : (xs : List Nat) -> (xsSrt : List Nat ** Sort xs xsSrt)
 quicksort [] = ([] ** qsortNilProof)
