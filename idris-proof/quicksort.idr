@@ -2,7 +2,7 @@ import Data.List.Quantifiers
 
 %default total
 
-||| Proof that if a number is not less than another, it is greater than or equal to it.
+||| If a number is not less than another, it is greater than or equal to it.
 ifNotLtThenGte : (LT a b -> Void) -> GTE a b
 ifNotLtThenGte {a = Z} {b = Z} _ = lteRefl
 ifNotLtThenGte {a = Z} {b = (S k)} notLt = absurd (notLt (LTESucc LTEZero))
