@@ -5,6 +5,7 @@ quicksort
 .cm
 sml-image*
 *.exe
+*.dll
 apl.js
 *.ibc
 META-INF/

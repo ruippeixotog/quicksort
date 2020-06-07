@@ -1,6 +1,6 @@
 # Quicksort
 
-Several implementations of quicksort in multiple languages. Inspired by @hugopeixoto's [mergesort](https://github.com/hugopeixoto/mergesort) project.
+Several implementations of quicksort in multiple languages. Inspired by [hugopeixoto](https://github.com/hugopeixoto)'s [mergesort](https://github.com/hugopeixoto/mergesort) project.
 
 ## Rules
 
@@ -14,10 +14,6 @@ Several implementations of quicksort in multiple languages. Inspired by @hugopei
 
 ## Testing
 
-The commands to compile and run each implementation are on the `test` script. To run a set of tests against an implementation, run:
+The commands to compile and run each implementation are in the `test` script. If you have the appropriate tools on your system to compile and/or run a solution, you can run a set of tests against a specific implementation using `./test <folder_name>` or run all implementations using `./test all`.
 
-```
-./test <folder_name>
-```
-
-The tests to run are defined in the `_test` folder.
+If you have Docker installed, you can also test implementations using `./docker_test (<folder_name>|all)`.

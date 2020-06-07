@@ -1,6 +1,6 @@
 #!/bin/bash
 
-function assert {
+assert() {
   if [ "$1" != "$2" ]; then
     echo "Wrong answer! Expected [$1], found [$2]"
     if [ -n "$3" ]; then
@@ -10,22 +10,7 @@ function assert {
   fi
 }
 
-function run_suite {
-  prog=${*:2}
-
-  exec 5< "../_test/$1.in"
-
-  read input_n <&5
-  while [[ -n $input_n ]]; do
-    read input_arr <&5
-    printf "$input_n\n$input_arr\n" | $prog
-    read input_n <&5
-  done
-
-  exec 5<&-
-}
-
-function test_suite {
+test_suite() {
   prog=${*:2}
 
   exec 5< "../_test/$1.in"
@@ -45,7 +30,7 @@ function test_suite {
   echo "All tests in dataset $1 passed!"
 }
 
-function test_static {
+test_static() {
   prog=$@
   expected='1 2 3 4 5 6 7 8 9 10'
   actual=$($prog)
