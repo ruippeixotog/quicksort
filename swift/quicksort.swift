@@ -1,28 +1,23 @@
-import Foundation
-
-func quicksort(inout arr: ArraySlice<Int>) {
+func quicksort(arr: inout ArraySlice<Int>) {
   if arr.isEmpty { return }
 
   var sep = arr.startIndex
   for i in arr.indices.dropFirst() {
-    if arr[i] < arr.first && ++sep != i {
-      swap(&arr[sep], &arr[i])
+    if arr[i] < arr.first! {
+      sep += 1
+      arr.swapAt(sep, i)
     }
   }
 
   if sep != arr.startIndex {
-    swap(&arr[arr.startIndex], &arr[sep])
+    arr.swapAt(arr.startIndex, sep)
   }
-  quicksort(&arr[arr.startIndex..<sep])
-  quicksort(&arr[(sep + 1)..<arr.endIndex])
+  quicksort(arr: &arr[arr.startIndex..<sep])
+  quicksort(arr: &arr[(sep + 1)..<arr.endIndex])
 }
 
-let stdin = NSFileHandle.fileHandleWithStandardInput()
-let arrStr = NSString(data: stdin.availableData,
-                      encoding: NSUTF8StringEncoding)! as String
+_ = readLine(strippingNewline: true)!
+var arr = readLine(strippingNewline: true)!.split { $0 == " " }.map { Int($0)! }
 
-var arr = arrStr.characters.split { $0 == " " || $0 == "\n" }
-  .dropFirst().map { Int(String($0))! }
-  
-quicksort(&arr[0..<arr.count])
-print(arr.map(String.init).joinWithSeparator(" "))
+quicksort(arr: &arr[0..<arr.count])
+print(arr.map(String.init).joined(separator: " "))

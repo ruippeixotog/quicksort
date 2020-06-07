@@ -43,7 +43,7 @@ docker_imgs=(
   "scala ruippeixotog/lang-scala:2.13.2"
   "scala-typelevel ruippeixotog/lang-scala:2.13.2"
   "sml eldesh/smlnj:110.97"
-  "swift swift:5.2.4" # TODO upgrade code to work on this version
+  "swift swift:5.2.4"
   "vb.net mono:6.8" # TODO suppress compiler messages
 )
 
