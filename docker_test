@@ -36,7 +36,7 @@ docker_imgs=(
   "perl perl:5.30" # TODO upgrade code to work on this version
   "php php:7.4.6"
   "prolog swipl:8.2.0"
-  "python python:2.7" # TODO update code to Python 3
+  "python python:3.8"
   "racket racket/racket:7.7"
   "ruby ruby:2.7"
   "rust rust:1.44"

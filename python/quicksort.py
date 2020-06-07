@@ -13,4 +13,4 @@ lines = sys.stdin.readlines()
 arr = [int(x) for x in lines[1].split(' ')]
 sorted = quicksort(arr)
 
-print ' '.join(str(x) for x in sorted)
+print(' '.join(str(x) for x in sorted))
