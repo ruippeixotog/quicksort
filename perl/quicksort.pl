@@ -6,7 +6,7 @@ sub quicksort {
 
   my (@lower, @upper);
   foreach my $e (@_[1..$#_]) {
-    push $e < $_[0] ? \@lower : \@upper, $e;
+    push @{$e < $_[0] ? \@lower : \@upper}, $e;
   }
 
   quicksort(@lower), $_[0], quicksort(@upper);

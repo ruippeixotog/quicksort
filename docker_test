@@ -33,7 +33,7 @@ docker_imgs=(
   "lua ruippeixotog/lang-lua:5.3"
   "nim nimlang/nim:1.2.0"
   "pascal ruippeixotog/lang-pascal:3.0.4" # TODO fix warning
-  "perl perl:5.30" # TODO upgrade code to work on this version
+  "perl perl:5.30"
   "php php:7.4.6"
   "prolog swipl:8.2.0"
   "python python:3.8"
