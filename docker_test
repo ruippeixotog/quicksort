@@ -8,7 +8,7 @@ docker_run() {
 # Non-official images are built from https://github.com/ruippeixotog/quicksort-docker
 docker_imgs=(
   "apl ruippeixotog/lang-apl"
-  "assembly ruippeixotog/lang-nasm32:2.14" # TODO write x86_64 version
+  "asm32 ruippeixotog/lang-nasm32:2.14" # TODO write x86_64 version
   "bash bash:4.4"
   "bash-pipes bash:4.4"
   "c gcc:9.2"
@@ -16,6 +16,7 @@ docker_imgs=(
   "c++ gcc:9.2"
   "c++-meta gcc:9.2"
   "clojure clojure:tools-deps-1.10.1.536"
+  "commonlisp ruippeixotog/lang-clisp:2.49"
   "erlang erlang:23"
   "f# mono:6.8"
   "fortran ruippeixotog/lang-gfortran:9.3"
@@ -29,7 +30,6 @@ docker_imgs=(
   "javascript node:14.4"
   "joy ruippeixotog/lang-joy"
   "kotlin ruippeixotog/lang-kotlin:1.3.72"
-  "lisp ruippeixotog/lang-clisp:2.49"
   "lua ruippeixotog/lang-lua:5.3"
   "nim nimlang/nim:1.2.0"
   "pascal ruippeixotog/lang-pascal:3.0.4" # TODO fix warning
