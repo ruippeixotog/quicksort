@@ -61,6 +61,10 @@ case $1 in
          gcc -m32 -o quicksort quicksort.o && \
          test_suite test1 ./quicksort
          ;;
+  asm64) nasm -g -f elf64 quicksort.asm && \
+         gcc -o quicksort quicksort.o && \
+         test_suite test1 ./quicksort
+         ;;
   bash) test_suite test1 bash quicksort.sh
         ;;
   bash-pipes) test_suite test1 bash quicksort.sh

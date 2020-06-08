@@ -8,7 +8,8 @@ docker_run() {
 # Non-official images are built from https://github.com/ruippeixotog/quicksort-docker
 docker_imgs=(
   "apl ruippeixotog/lang-apl"
-  "asm32 ruippeixotog/lang-nasm32:2.14" # TODO write x86_64 version
+  "asm32 ruippeixotog/lang-nasm32:2.14"
+  "asm64 ruippeixotog/lang-nasm:2.14"
   "bash bash:4.4"
   "bash-pipes bash:4.4"
   "c gcc:9.2"
