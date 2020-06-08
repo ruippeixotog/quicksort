@@ -30,8 +30,8 @@ section .text                   ; // code
     ret                         ; }
 
   quicksort:                    ; void quicksort(int st, int end) {
-    mov eax, [esp+8]            ;   int _i = st;
-    mov edx, [esp+4]
+    mov eax, [esp+4]            ;   int _i = st;
+    mov edx, [esp+8]
     cmp eax, edx
     je .end_if                  ;   if(st != end) {
       mov ecx, eax              ;     int _sep = st;
@@ -47,28 +47,28 @@ section .text                   ; // code
           jge .loop             ;       if(arr[_i] >= _pivot) continue;
 
           add ecx, 1
-          push ecx
           push eax
+          push ecx
           call swap
           add esp, 8            ;       swap(++_sep, _i);
     
           jmp .loop             ;     }
          
       .end_loop:
-      push dword [esp+8]
       push ecx
+      push dword [esp+8]
       call swap
       add esp, 8                ;     swap(st, _sep);
 
-      push dword [esp+8]
       push ecx
+      push dword [esp+8]
       call quicksort
-      pop ecx
-      add esp, 4                ;     quicksort(st, _sep);
+      add esp, 4
+      pop ecx                   ;     quicksort(st, _sep);
 
+      push dword [esp+8]
       add ecx, 1
       push ecx
-      push dword [esp+8]
       call quicksort
       add esp, 8                ;     quicksort(++_sep, end);
 
@@ -133,8 +133,8 @@ section .text                   ; // code
 
     call read_arr               ;   read_arr();
 
-    push 0
     push dword [n]
+    push 0
     call quicksort
     add esp, 8                  ;   quicksort(0, n);
 
