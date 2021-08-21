@@ -98,6 +98,8 @@ case $1 in
       ;;
   groovy) test_suite test1 groovy quicksort.groovy
           ;;
+  hack) test_suite test1 hhvm quicksort.hack
+        ;;
   haskell) ghc quicksort.hs -v0 -o quicksort && \
            test_suite test1 ./quicksort
            ;;

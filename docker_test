@@ -23,6 +23,7 @@ docker_imgs=(
   "fortran ruippeixotog/lang-gfortran:9.3"
   "go golang:1.14"
   "groovy groovy:3.0-jdk8"
+  "hack hhvm/hhvm:4.123.0"
   "haskell haskell:8.8"
   "idris ruippeixotog/lang-idris:1.3.2"
   "idris-proof ruippeixotog/lang-idris:1.3.2"
