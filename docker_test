@@ -19,6 +19,7 @@ docker_imgs=(
   "clojure clojure:tools-deps-1.10.1.536"
   "commonlisp ruippeixotog/lang-clisp:2.49"
   "erlang erlang:23"
+  "elixir elixir:1.8.2"
   "f# mono:6.8"
   "fortran ruippeixotog/lang-gfortran:9.3"
   "go golang:1.14"
