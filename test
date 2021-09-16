@@ -138,6 +138,8 @@ case $1 in
        sleep 1
        test_static curl -s localhost:8000/quicksort.php
        ;;
+  portugol) test_static gpt -i ordenarápido.gpt
+            ;;
   prolog) swipl -q --stand_alone=true --goal=main --toplevel=halt \
             --foreign=save -o quicksort -c quicksort.pl && \
           test_suite test1 ./quicksort

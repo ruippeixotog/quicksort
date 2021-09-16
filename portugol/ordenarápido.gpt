@@ -1,0 +1,44 @@
+algoritmo ordenarapido;
+
+variáveis
+  mat: matriz[10] de inteiros;
+fim-variáveis
+
+início
+  mat[0] := 5; mat[1] := 1; mat[2] := 9; mat[3] := 3; mat[4] := 7;
+  mat[5] := 6; mat[6] := 4; mat[7] := 8; mat[8] := 10; mat[9] := 2;
+
+  ordenarapido(0, 9);
+
+  imprima(mat[0], " ", mat[1], " ", mat[2], " ", mat[3], " ", mat[4],
+    " ", mat[5], " ", mat[6], " ", mat[7], " ", mat[8], " ", mat[9]);
+fim
+
+função ordenarapido(primeiro: inteiro, ultimo: inteiro)
+  i: inteiro;
+  separador: inteiro;
+início
+  se primeiro >= ultimo então
+    retorne;
+  fim-se
+
+  separador := primeiro;
+  para i de primeiro + 1 até ultimo faça
+    se mat[i] < mat[primeiro] então
+      separador := separador + 1;
+      troca(separador, i);
+    fim-se
+  fim-para
+
+  troca(primeiro, separador);
+  ordenarapido(primeiro, separador - 1);
+  ordenarapido(separador + 1, ultimo);
+fim
+
+função troca(i: inteiro, j: inteiro)
+  tmp: inteiro;
+início
+  tmp := mat[i];
+  mat[i] := mat[j];
+  mat[j] := tmp;
+fim

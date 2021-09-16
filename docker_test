@@ -38,6 +38,7 @@ docker_imgs=(
   "pascal ruippeixotog/lang-pascal:3.0.4" # TODO fix warning
   "perl perl:5.30"
   "php php:7.4.6"
+  "portugol ruippeixotog/lang-gpt:1.1"
   "prolog swipl:8.2.0"
   "python python:3.8"
   "racket racket/racket:7.7"
