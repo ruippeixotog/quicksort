@@ -11,17 +11,23 @@ assert() {
 }
 
 test_suite() {
-  prog=${*:2}
+  local prog=${*:2}
+  local input_n input_arr expected
 
   exec 5< "../_test/$1.in"
   exec 6< "../_test/$1.out"
 
   read expected <&6
+  local k=0
   while [[ -n $expected ]]; do
     read input_n <&5
     read input_arr <&5
-    actual=$(printf "$input_n\n$input_arr\n" | $prog)
+
+    printf "Running test case $((++k)) (size $input_n)... "
+    local actual=$(printf "$input_n\n$input_arr\n" | $prog)
     assert "$expected" "$actual" "$input_arr"
+    echo "Done"
+
     read expected <&6
   done
 
@@ -31,9 +37,9 @@ test_suite() {
 }
 
 test_static() {
-  prog=$@
-  expected='1 2 3 4 5 6 7 8 9 10'
-  actual=$($prog)
+  local prog=$@
+  local expected='1 2 3 4 5 6 7 8 9 10'
+  local actual=$($prog)
   assert "$expected" "$actual"
 
   echo "Static test passed!"
