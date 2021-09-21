@@ -1,0 +1,49 @@
+name: CI
+on:
+  - push
+  - pull_request
+
+jobs:
+  detect_languages:
+    name: Select tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Find changed languages
+        id: find-languages
+        run: >
+          before_ref=${{ github.event.before || github.event.pull_request.base.sha }};
+          all_langs=$(ls -d */ | egrep -v '^_' | tr -d /);
+          changed_dirs=$( \
+            git diff --name-only $before_ref ${{ github.sha }} | \
+            cut -f1 -d'/' | \
+            sort | \
+            uniq | \
+            comm -12 - <(echo "$all_langs" | sort) | \
+            jq -R -s -c 'split("\n") | map(select(length > 0))' \
+          );
+          echo "::set-output name=languages::$changed_dirs"
+
+    outputs:
+      languages: ${{ steps.find-languages.outputs.languages }}
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: detect_languages
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: ${{ fromJson(needs.detect_languages.outputs.languages) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Run tests
+        run: ./docker_test ${{ matrix.lang }}
