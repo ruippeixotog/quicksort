@@ -18,16 +18,26 @@ jobs:
         id: find-languages
         run: >
           before_ref=${{ github.event.before || github.event.pull_request.base.sha }};
-          all_langs=$(ls -d */ | egrep -v '^_' | tr -d /);
-          changed_dirs=$( \
-            git diff --name-only $before_ref ${{ github.sha }} | \
-            cut -f1 -d'/' | \
-            sort | \
-            uniq | \
-            comm -12 - <(echo "$all_langs" | sort) | \
+          changed_files=$(git diff --name-only $before_ref ${{ github.sha }});
+          all_langs=$(ls -d */ | egrep -v '^_' | tr -d / | sort);
+
+          if [[ $changed_files =~ ^(_test/.*|test|docker_test)$ ]]; then
+            changed_langs="$all_langs";
+          else
+            changed_langs=$( \
+              git diff --name-only $before_ref ${{ github.sha }} | \
+              cut -f1 -d'/' | \
+              sort | \
+              uniq | \
+              comm -12 - <(echo "$all_langs") \
+            );
+          fi;
+
+          changed_langs_json=$( \
+            echo "$changed_langs" | \
             jq -R -s -c 'split("\n") | map(select(length > 0))' \
           );
-          echo "::set-output name=languages::$changed_dirs"
+          echo "::set-output name=languages::$changed_langs_json"
 
     outputs:
       languages: ${{ steps.find-languages.outputs.languages }}
@@ -47,4 +57,4 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run tests
-        run: ./docker_test ${{ matrix.lang }}
+        run: ./docker_test '${{ matrix.lang }}'
