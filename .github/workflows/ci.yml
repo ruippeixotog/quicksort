@@ -18,16 +18,22 @@ jobs:
         id: find-languages
         run: >
           before_ref=${{ github.event.before || github.event.pull_request.base.sha }};
-          all_langs=$(ls -d */ | egrep -v '^_' | tr -d /);
-          changed_dirs=$( \
-            git diff --name-only $before_ref ${{ github.sha }} | \
-            cut -f1 -d'/' | \
-            sort | \
-            uniq | \
-            comm -12 - <(echo "$all_langs" | sort) | \
-            jq -R -s -c 'split("\n") | map(select(length > 0))' \
-          );
-          echo "::set-output name=languages::$changed_dirs"
+          changed_files=$(git diff --name-only $before_ref ${{ github.sha }});
+
+          if [[ changed_files =~ ^(_test/.*|test|docker_test)$ ]]; then
+            changed_langs='["all"]';
+          else
+            all_langs=$(ls -d */ | egrep -v '^_' | tr -d /);
+            changed_langs=$( \
+              git diff --name-only $before_ref ${{ github.sha }} | \
+              cut -f1 -d'/' | \
+              sort | \
+              uniq | \
+              comm -12 - <(echo "$all_langs" | sort) | \
+              jq -R -s -c 'split("\n") | map(select(length > 0))' \
+            );
+          fi;
+          echo "::set-output name=languages::$changed_langs"
 
     outputs:
       languages: ${{ steps.find-languages.outputs.languages }}
