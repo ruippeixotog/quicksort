@@ -1,9 +1,9 @@
 #!/bin/bash
 
 assert() {
-  if [ "$1" != "$2" ]; then
+  if [[ $1 != $2 ]]; then
     echo "Wrong answer! Expected [$1], found [$2]"
-    if [ -n "$3" ]; then
+    if [[ -n $3 ]]; then
       echo "(input array was [$3])"
     fi
     exit 1
@@ -45,135 +45,25 @@ test_static() {
   echo "Static test passed!"
 }
 
-if [ $1 == "all" ]; then
-  for lang in $(ls -d */ | egrep -v '^_' | tr -d /); do
-    echo "Testing $lang version..."
-    ./test $lang
-  done
-  exit 0
-fi
-
-cd $1 || {
-  echo "Error: directory $1 not found."
+cd "$1" || {
+  echo "Error: implementation $1 not found."
   exit 1
 }
 
-case $1 in
-  apl) wget -q -nc https://raw.githubusercontent.com/ngn/apl/f31f06/lib/apl.js && \
-       chmod +x apl.js && \
-       test_suite test1 ./apl.js quicksort.apl
-       ;;
-  asm32) nasm -g -f elf quicksort.asm && \
-         gcc -m32 -o quicksort quicksort.o && \
-         test_suite test1 ./quicksort
-         ;;
-  asm64) nasm -g -f elf64 quicksort.asm && \
-         gcc -o quicksort quicksort.o && \
-         test_suite test1 ./quicksort
-         ;;
-  bash) test_suite test1 bash quicksort.sh
-        ;;
-  bash-pipes) test_suite test1 bash quicksort.sh
-              ;;
-  c) gcc quicksort.c -o quicksort && \
-     test_suite test1 ./quicksort
-     ;;
-  clojure) test_suite test1 clojure quicksort.clj
-           ;;
-  commonlisp) test_suite test1 clisp quicksort.lisp
-              ;;
-  c#) mcs Quicksort.cs && \
-      test_suite test1 mono Quicksort.exe
-      ;;
-  c++) g++ quicksort.cpp -o quicksort && \
-       test_suite test1 ./quicksort
-       ;;
-  c++-meta) g++ quicksort.cpp -o quicksort && \
-            test_static ./quicksort
-            ;;
-  elixir) test_suite test1 elixir quicksort.exs
-          ;;
-  erlang) test_suite test1 escript quicksort.erl
-          ;;
-  fortran) gfortran -o quicksort quicksort.f95 && \
-           test_suite test1 ./quicksort
-           ;;
-  f#) fsharpc --nologo Quicksort.fs && \
-      test_suite test1 mono Quicksort.exe
-      ;;
-  go) go build quicksort.go && \
-      test_suite test1 ./quicksort
-      ;;
-  groovy) test_suite test1 groovy quicksort.groovy
-          ;;
-  hack) test_suite test1 hhvm quicksort.hack
-        ;;
-  haskell) ghc quicksort.hs -v0 -o quicksort && \
-           test_suite test1 ./quicksort
-           ;;
-  idris) idris quicksort.idr -o quicksort && \
-         test_suite test1 ./quicksort
-         ;;
-  idris-proof) idris quicksort.idr -o quicksort && \
-               test_suite test2 ./quicksort
-               ;;
-  io) test_suite test1 io quicksort.io
-      ;;
-  java) javac Quicksort.java && \
-        test_suite test1 java Quicksort
-        ;;
-  javascript) test_suite test1 node quicksort.js
-              ;;
-  joy) test_static joy quicksort.joy
-       ;;
-  kotlin) kotlinc quicksort.kt && \
-          test_suite test1 kotlin QuicksortKt
-          ;;
-  lua) test_suite test1 lua quicksort.lua
-       ;;
-  nim) nim c --hints=off --verbosity=0 --nimcache=/tmp/nim quicksort.nim && \
-       test_suite test1 ./quicksort
-       ;;
-  pascal) fpc -v0 quicksort.pas && \
-          test_suite test1 ./quicksort
-          ;;
-  perl) test_suite test1 perl quicksort.pl
-        ;;
-  php) php -S localhost:8000 > /dev/null 2>&1 &
-       trap "kill -9 $!" EXIT
-       sleep 1
-       test_static curl -s localhost:8000/quicksort.php
-       ;;
-  portugol) test_static gpt -i ordenarápido.gpt
-            ;;
-  prolog) swipl -q --stand_alone=true --goal=main --toplevel=halt \
-            --foreign=save -o quicksort -c quicksort.pl && \
-          test_suite test1 ./quicksort
-          ;;
-  python) test_suite test1 python quicksort.py
-          ;;
-  racket) test_suite test1 racket quicksort.rkt
-          ;;
-  ruby) test_suite test1 ruby quicksort.rb
-        ;;
-  rust) rustc quicksort.rs && \
-        test_suite test1 ./quicksort
-        ;;
-  scala) scalac Quicksort.scala && \
-         test_suite test1 scala Quicksort
-         ;;
-  scala-typelevel) scalac -language:_ Quicksort.scala && \
-                   test_static scala Quicksort
-                   ;;
-  sml) ml-build quicksort.cm Quicksort.main sml-image > /dev/null && \
-       test_suite test1 sml @SMLload=sml-image
-       ;;
-  swift) swiftc quicksort.swift && \
-         test_suite test1 ./quicksort
-         ;;
-  vb.net) vbnc -nologo -quiet Quicksort.vb && \
-          test_suite test1 mono Quicksort.exe
-          ;;
-  *) echo "Error: no runner implementation for $1 was defined."
-     ;;
-esac
+source .env
+
+if [[ -z $RUN_CMD ]]; then
+  echo "Error: no run command for $1 was defined."
+  exit 1
+fi
+
+eval "$BUILD_CMD"
+
+TEST_SUITES=${TEST_SUITES:-test1}
+for suite in ${TEST_SUITES//,/ }; do
+  if [[ $suite == 'static' ]]; then
+    test_static $RUN_CMD
+  else
+    test_suite $suite $RUN_CMD
+  fi
+done

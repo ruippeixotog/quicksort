@@ -1,66 +1,11 @@
 #!/bin/bash
 
-docker_run() {
-  docker run --rm -v "$PWD":/quicksort -w /quicksort $1 bash './test' "$2"
-}
-
 # Non-official images are built from https://github.com/ruippeixotog/quicksort-docker
-docker_imgs=(
-  "apl ruippeixotog/lang-apl"
-  "asm32 ruippeixotog/lang-nasm32:2.14"
-  "asm64 ruippeixotog/lang-nasm:2.14"
-  "bash bash:4.4"
-  "bash-pipes bash:4.4"
-  "c gcc:9.2"
-  "c# mono:6.8"
-  "c++ gcc:9.2"
-  "c++-meta gcc:9.2"
-  "clojure clojure:tools-deps-1.10.1.536"
-  "commonlisp ruippeixotog/lang-clisp:2.49"
-  "erlang erlang:23"
-  "elixir elixir:1.8.2"
-  "f# mono:6.8"
-  "fortran ruippeixotog/lang-gfortran:9.3"
-  "go golang:1.14"
-  "groovy groovy:3.0-jdk8"
-  "hack hhvm/hhvm:4.123.0"
-  "haskell haskell:8.8"
-  "idris ruippeixotog/lang-idris:1.3.2"
-  "idris-proof ruippeixotog/lang-idris:1.3.2"
-  "io ruippeixotog/lang-io:current"
-  "java openjdk:8"
-  "javascript node:14.4"
-  "joy ruippeixotog/lang-joy"
-  "kotlin ruippeixotog/lang-kotlin:1.3.72"
-  "lua ruippeixotog/lang-lua:5.3"
-  "nim nimlang/nim:1.2.0"
-  "pascal ruippeixotog/lang-pascal:3.0.4" # TODO fix warning
-  "perl perl:5.30"
-  "php php:7.4.6"
-  "portugol ruippeixotog/lang-gpt:1.1"
-  "prolog swipl:8.2.0"
-  "python python:3.8"
-  "racket racket/racket:7.7"
-  "ruby ruby:2.7"
-  "rust rust:1.44"
-  "scala ruippeixotog/lang-scala:2.13.2"
-  "scala-typelevel ruippeixotog/lang-scala:2.13.2"
-  "sml eldesh/smlnj:110.97"
-  "swift swift:5.2.4"
-  "vb.net mono:6.8" # TODO suppress compiler messages
-)
+source "$1"/.env
 
-if [[ $1 == "all" ]]; then
-  for lang in $(ls -d */ | egrep -v '^_' | tr -d /); do
-    echo "Testing $lang version..."
-    ./docker_test $lang
-  done
-  exit 0
-fi
-
-docker_img=$(printf '%s\n' "${docker_imgs[@]}" | grep "$1 " | awk '{print $2}')
-if [[ -z $docker_img ]]; then
+if [[ -z $DOCKER_IMAGE ]]; then
   echo "Error: no Docker image for $1 was defined."
   exit 1
 fi
-docker_run $docker_img "$1"
+
+docker run --rm -v "$PWD":/quicksort -w /quicksort $DOCKER_IMAGE bash ./test "$1"
