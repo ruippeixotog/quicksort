@@ -21,7 +21,7 @@ jobs:
           changed_files=$(git diff --name-only $before_ref ${{ github.sha }});
           all_langs=$(ls -d */ | egrep -v '^_' | tr -d / | sort);
 
-          if [[ $changed_files =~ ^(_test/.*|test|docker_test)$ ]]; then
+          if echo $changed_files | egrep -q '^(_test/.*|test|docker_test)$'; then
             changed_langs="$all_langs";
           else
             changed_langs=$( \
