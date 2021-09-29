@@ -16,24 +16,24 @@ jobs:
 
       - name: Find changed languages
         id: find-languages
-        run: >
-          before_ref=${{ github.event.before || github.event.pull_request.base.sha }};
-          changed_files=$(git diff --name-only $before_ref ${{ github.sha }});
+        run: |
+          before_ref=${{ github.event.before || github.event.pull_request.base.sha }}
+          git diff --name-only $before_ref ${{ github.sha }} > changed_files
+          ls -d */ | egrep -v '^_' | tr -d / | sort > all_langs
 
-          if [[ changed_files =~ ^(_test/.*|test|docker_test)$ ]]; then
-            changed_langs='["all"]';
+          if egrep -q '^(_test/.*|test|docker_test)$' changed_files; then
+            cp all_langs changed_langs
           else
-            all_langs=$(ls -d */ | egrep -v '^_' | tr -d /);
-            changed_langs=$( \
-              git diff --name-only $before_ref ${{ github.sha }} | \
-              cut -f1 -d'/' | \
-              sort | \
-              uniq | \
-              comm -12 - <(echo "$all_langs" | sort) | \
-              jq -R -s -c 'split("\n") | map(select(length > 0))' \
-            );
-          fi;
-          echo "::set-output name=languages::$changed_langs"
+            git diff --name-only $before_ref ${{ github.sha }} |
+              cut -f1 -d'/' |
+              sort |
+              uniq |
+              comm -12 - all_langs > changed_langs
+          fi
+
+          jq -R -s -c 'split("\n") | map(select(length > 0))' < changed_langs > changed_langs.json
+          echo "Changed languages: $(cat changed_langs.json)"
+          echo "::set-output name=languages::$(cat changed_langs.json)"
 
     outputs:
       languages: ${{ steps.find-languages.outputs.languages }}
@@ -53,4 +53,4 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run tests
-        run: ./docker_test ${{ matrix.lang }}
+        run: ./docker_test '${{ matrix.lang }}'
