@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 assert() {
   if [[ $1 != $2 ]]; then
@@ -28,7 +29,7 @@ test_suite() {
     assert "$expected" "$actual" "$input_arr"
     echo "Done"
 
-    read expected <&6
+    read expected <&6 ||:
   done
 
   exec 5<&-
@@ -45,19 +46,17 @@ test_static() {
   echo "Static test passed!"
 }
 
-cd "$1" || {
-  echo "Error: implementation $1 not found."
+error() {
+  echo "Error: $1."
   exit 1
 }
 
+cd "$1" || error "implementation $1 not found"
+
 source .env
 
-if [[ -z $RUN_CMD ]]; then
-  echo "Error: no run command for $1 was defined."
-  exit 1
-fi
-
-eval "$BUILD_CMD"
+[[ -n $RUN_CMD ]] || error "no run command for $1 was defined"
+eval "$BUILD_CMD" || error "build failed"
 
 TEST_SUITES=${TEST_SUITES:-test1}
 for suite in ${TEST_SUITES//,/ }; do
