@@ -8,4 +8,4 @@ if [[ -z $DOCKER_IMAGE ]]; then
   exit 1
 fi
 
-docker run --rm -v "$PWD":/quicksort -w /quicksort $DOCKER_IMAGE bash ./test "$1"
+docker run --rm -v "$PWD":/quicksort -w /quicksort $DOCKER_ARGS $DOCKER_IMAGE bash ./test "$1"
