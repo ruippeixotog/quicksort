@@ -14,29 +14,34 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Find all languages
+        run: |
+          ls -d */ | egrep -v '^_' | tr -d / | sort > all_langs
+          cp all_langs langs_to_test
+
       - name: Find changed languages
-        id: find-languages
+        if: github.event_name == 'pull_request' || github.ref != 'refs/heads/master'
         run: |
           before_ref=${{ github.event.before || github.event.pull_request.base.sha }}
           git diff --name-only $before_ref ${{ github.sha }} > changed_files
-          ls -d */ | egrep -v '^_' | tr -d / | sort > all_langs
 
-          if egrep -q '^(_test/.*|test|docker_test)$' changed_files; then
-            cp all_langs changed_langs
-          else
+          if ! egrep -q '^(_test/.*|test|docker_test)$' changed_files; then
             git diff --name-only $before_ref ${{ github.sha }} |
               cut -f1 -d'/' |
               sort |
               uniq |
-              comm -12 - all_langs > changed_langs
+              comm -12 - all_langs > langs_to_test
           fi
 
-          jq -R -s -c 'split("\n") | map(select(length > 0))' < changed_langs > changed_langs.json
-          echo "Changed languages: $(cat changed_langs.json)"
-          echo "::set-output name=languages::$(cat changed_langs.json)"
+      - name: Set job output
+        id: set-job-output
+        run: |
+          jq -R -s -c 'split("\n") | map(select(length > 0))' < langs_to_test > langs_to_test.json
+          echo "Languages to test: $(cat langs_to_test.json)"
+          echo "::set-output name=languages::$(cat langs_to_test.json)"
 
     outputs:
-      languages: ${{ steps.find-languages.outputs.languages }}
+      languages: ${{ steps.set-job-output.outputs.languages }}
 
   test:
     name: Test
