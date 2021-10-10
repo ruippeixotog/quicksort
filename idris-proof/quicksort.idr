@@ -11,6 +11,7 @@ ZZS (Pos n) = Pos (S n)
 ZZS (NegS Z) = Pos Z
 ZZS (NegS (S n)) = NegS n
 
+||| Less than or equal to
 data ZZLTE : ZZ -> ZZ -> Type where
   ||| If n, m are `Nat` and n <= m, then n <= m in `ZZ`
   ZZLTEPos : LTE n m -> ZZLTE (Pos n) (Pos m)
