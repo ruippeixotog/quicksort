@@ -2,12 +2,79 @@ import Data.List.Quantifiers
 
 %default total
 
+||| An integer is either a positive `Nat` or the negated successor of a `Nat`.
+data ZZ = Pos Nat | NegS Nat
+
+||| Successor of a `ZZ`.
+ZZS : ZZ -> ZZ
+ZZS (Pos n) = Pos (S n)
+ZZS (NegS Z) = Pos Z
+ZZS (NegS (S n)) = NegS n
+
+data ZZLTE : ZZ -> ZZ -> Type where
+  ||| If n, m are `Nat` and n <= m, then n <= m in `ZZ`
+  ZZLTEPos : LTE n m -> ZZLTE (Pos n) (Pos m)
+  ||| If n, m are `Nat` and n <= m, then -m >= -n in `ZZ`
+  ZZLTENeg : LTE n m -> ZZLTE (NegS m) (NegS n)
+  ||| Negative numbers are always smaller than positive or zero ones 
+  ZZLTENegPos : ZZLTE (NegS n) (Pos m)
+
+||| Greater than or equal to
+ZZGTE : ZZ -> ZZ -> Type
+ZZGTE left right = ZZLTE right left
+
+||| Strictly less than
+ZZLT : ZZ -> ZZ -> Type
+ZZLT left right = ZZLTE (ZZS left) right
+
+||| If n, m are `Nat` and n <= m in `ZZ`, then n <= m in `Nat`
+ifPosZZLTEThenLTE : ZZLTE (Pos n) (Pos m) -> LTE n m
+ifPosZZLTEThenLTE (ZZLTEPos ltePrf) = ltePrf
+
+||| If n, m are `Nat` and -n <= -m in `ZZ`, then m <= n in `Nat`
+ifNegZZLTEThenGTE : ZZLTE (NegS n) (NegS m) -> LTE m n
+ifNegZZLTEThenGTE (ZZLTENeg ltePrf) = ltePrf
+
+||| A positive number is never less than or equal to a negative number
+posNotZZLTEThanNeg : Not (ZZLTE (Pos n) (NegS m))
+posNotZZLTEThanNeg ltePrf impossible
+
+||| A decision procedure for `ZZLTE`
+isZZLTE : (m : ZZ) -> (n : ZZ) -> Dec (ZZLTE m n)
+isZZLTE (Pos n) (Pos m) with (isLTE n m)
+  isZZLTE (Pos n) (Pos m) | (Yes prf) = Yes (ZZLTEPos prf)
+  isZZLTE (Pos n) (Pos m) | (No contra) = No (contra . ifPosZZLTEThenLTE)
+isZZLTE (NegS n) (NegS m) with (isLTE m n)
+  isZZLTE (NegS n) (NegS m) | (Yes prf) = Yes (ZZLTENeg prf)
+  isZZLTE (NegS n) (NegS m) | (No contra) = No (contra . ifNegZZLTEThenGTE)
+isZZLTE (NegS n) (Pos m) = Yes ZZLTENegPos
+isZZLTE (Pos n) (NegS m) = No posNotZZLTEThanNeg
+
+||| n + 1 < m implies n < m
+zzLteSuccLeft : ZZLTE (ZZS n) m -> ZZLTE n m
+zzLteSuccLeft (ZZLTEPos ltePrf) {n = Pos k} = ZZLTEPos (lteSuccLeft ltePrf)
+zzLteSuccLeft (ZZLTEPos ltePrf) {n = NegS Z} = ZZLTENegPos
+zzLteSuccLeft (ZZLTENeg ltePrf) {n = NegS (S k)} = ZZLTENeg (lteSuccRight ltePrf)
+zzLteSuccLeft ZZLTENegPos {n = NegS (S k)} = ZZLTENegPos
+
 ||| If a number is not less than another, it is greater than or equal to it.
-ifNotLtThenGte : (LT a b -> Void) -> GTE a b
-ifNotLtThenGte {a = Z} {b = Z} _ = lteRefl
-ifNotLtThenGte {a = Z} {b = (S k)} notLt = absurd (notLt (LTESucc LTEZero))
-ifNotLtThenGte {a = (S k)} {b = Z} _ = LTEZero
-ifNotLtThenGte {a = (S k)} {b = (S j)} notLt = LTESucc (ifNotLtThenGte (notLt . LTESucc))
+notZZLTImpliesZZGTE : (ZZLT n m -> Void) -> ZZGTE n m
+notZZLTImpliesZZGTE {n = Pos k} {m = Pos j} notLt = ZZLTEPos $ notLTImpliesGTE (notLt . ZZLTEPos)
+notZZLTImpliesZZGTE {n = NegS Z} {m = NegS j} _ = ZZLTENeg LTEZero
+notZZLTImpliesZZGTE {n = NegS (S k)} {m = NegS j} notLt = ZZLTENeg $ notLTImpliesGTE (notLt . ZZLTENeg . fromLteSucc)
+notZZLTImpliesZZGTE {n = Pos k} {m = NegS j} _ = ZZLTENegPos
+notZZLTImpliesZZGTE {n = NegS Z} {m = Pos j} notLt = absurd $ notLt (ZZLTEPos LTEZero)
+notZZLTImpliesZZGTE {n = NegS (S k)} {m = Pos j} notLt = absurd $ notLt ZZLTENegPos
+
+Cast Integer ZZ where
+  cast n = if n >= 0 then Pos (cast n) else NegS (cast $ -n - 1)
+
+Cast String ZZ where
+  cast str = cast (the Integer (cast str))
+
+Show ZZ where
+  showPrec d (Pos n) = showPrec d n
+  showPrec d (NegS n) = showParens (d >= PrefixMinus) $ "-" ++ showPrec PrefixMinus (S n)
 
 ---
 
@@ -73,50 +140,50 @@ forallPerm (px :: pxs) (PInsert ep perm) with (forallPerm pxs perm)
 
 ---
 
-||| Proof that a list is sorted.
-data Sorted : List e -> Type where
+||| Proof that an integer list is sorted.
+data Sorted : List ZZ -> Type where
   SEmpty : Sorted []
   SSingleton : Sorted [x]
-  SCons : LTE x x2 -> Sorted (x2 :: xs) -> Sorted (x :: x2 :: xs)
+  SCons : ZZLTE x x2 -> Sorted (x2 :: xs) -> Sorted (x :: x2 :: xs)
 
 ---
 
-AllLT : List Nat -> Nat -> Type
-AllLT xs pivot = All (\a => LT a pivot) xs
+AllLT : List ZZ -> ZZ -> Type
+AllLT xs pivot = All (\a => ZZLT a pivot) xs
 
-AllGTE : List Nat -> Nat -> Type
-AllGTE xs pivot = All (\a => GTE a pivot) xs
+AllGTE : List ZZ -> ZZ -> Type
+AllGTE xs pivot = All (\a => ZZGTE a pivot) xs
 
-||| The contract for a function that correctly partitions a list of numbers into those that are
+||| The contract for a function that correctly partitions a list of integers into those that are
 ||| smaller than a pivot and those that are not.
-Partition : Nat -> List Nat -> List Nat -> List Nat -> Type
+Partition : ZZ -> List ZZ -> List ZZ -> List ZZ -> Type
 Partition pivot xs lts gtes = (Perm xs (lts ++ gtes), AllLT lts pivot, AllGTE gtes pivot)
 
 partitionNilProof : Partition pivot [] [] []
 partitionNilProof = (PEmpty, Nil, Nil)
 
-partitionLtProof : Partition pivot xs lts gtes -> LT x pivot ->
+partitionLtProof : Partition pivot xs lts gtes -> ZZLT x pivot ->
                    Partition pivot (x :: xs) (x :: lts) gtes
 partitionLtProof {x} (xsPerm, ltPrfs, gtPrfs) ltPrf =
   (PInsert Here xsPerm, ltPrf :: ltPrfs, gtPrfs)
 
-partitionNotLtProof : Partition pivot xs lts gtes -> (LT x pivot -> Void) ->
+partitionNotLtProof : Partition pivot xs lts gtes -> (ZZLT x pivot -> Void) ->
                       Partition pivot (x :: xs) lts (x :: gtes)
 partitionNotLtProof {x} (xsPerm, ltPrfs, gtPrfs) notLtPrf =
-  (PInsert eqPlusInsert xsPerm, ltPrfs, ifNotLtThenGte notLtPrf :: gtPrfs)
+  (PInsert eqPlusInsert xsPerm, ltPrfs, notZZLTImpliesZZGTE notLtPrf :: gtPrfs)
 
-partitionP : (pivot : Nat) -> (xs : List Nat) ->
-             (lts : List Nat ** (gtes : List Nat ** Partition pivot xs lts gtes))
+partitionP : (pivot : ZZ) -> (xs : List ZZ) ->
+             (lts : List ZZ ** (gtes : List ZZ ** Partition pivot xs lts gtes))
 partitionP pivot [] = ([] ** ([] ** partitionNilProof))
 partitionP pivot (x :: xs) with (partitionP pivot xs)
-  | (lts ** (gtes ** tailPrf)) = case isLTE (S x) pivot of
+  | (lts ** (gtes ** tailPrf)) = case isZZLTE (ZZS x) pivot of
       Yes ltPrf => ((x :: lts) ** (gtes ** partitionLtProof tailPrf ltPrf))
       No notLtPrf => (lts ** ((x :: gtes) ** partitionNotLtProof tailPrf notLtPrf))
 
 ---
 
 ||| The contract for a function that correctly sorts a list.
-Sort : List Nat -> List Nat -> Type
+Sort : List ZZ -> List ZZ -> Type
 Sort xs xsSorted = (Perm xs xsSorted, Sorted xsSorted)
 
 qsortNilProof : Sort [] []
@@ -133,7 +200,7 @@ qsortConsOrdProof {xs = []} {ys = []} _ _ _ _ = SSingleton
 qsortConsOrdProof {xs = []} {ys = y :: ys'} _ ysOrd _ (gtePrf :: _) = SCons gtePrf ysOrd
 qsortConsOrdProof {xs = x :: []} _ ysOrd (ltPrf :: Nil) ysGte =
   let restOrd = qsortConsOrdProof SEmpty ysOrd Nil ysGte in
-    SCons (lteSuccLeft ltPrf) restOrd
+    SCons (zzLteSuccLeft ltPrf) restOrd
 qsortConsOrdProof {xs = x :: x2 :: xs'} (SCons ltPrf xsRestOrd) ysOrd (_ :: xsRestLt) ysGte =
   let restOrd = qsortConsOrdProof xsRestOrd ysOrd xsRestLt ysGte in
     SCons ltPrf restOrd
@@ -144,7 +211,7 @@ qsortConsProof (xsPerm, ltPrfs, gtePrfs) (ltsPerm, ltsOrd) (gtesPerm, gtesOrd) =
   (qsortConsPermProof xsPerm ltsPerm gtesPerm,
    qsortConsOrdProof ltsOrd gtesOrd (forallPerm ltPrfs ltsPerm) (forallPerm gtePrfs gtesPerm))
 
-quicksort : (xs : List Nat) -> (xsSrt : List Nat ** Sort xs xsSrt)
+quicksort : (xs : List ZZ) -> (xsSrt : List ZZ ** Sort xs xsSrt)
 quicksort [] = ([] ** qsortNilProof)
 quicksort (pivot :: xs) = case partitionP pivot xs of
   (lts ** (gtes ** partPrf)) =>
