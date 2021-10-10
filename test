@@ -58,7 +58,7 @@ source .env
 [[ -n $RUN_CMD ]] || error "no run command for $1 was defined"
 eval "$BUILD_CMD" || error "build failed"
 
-TEST_SUITES=${TEST_SUITES:-test1}
+TEST_SUITES=${TEST_SUITES:-test1,test2}
 for suite in ${TEST_SUITES//,/ }; do
   if [[ $suite == 'static' ]]; then
     test_static $RUN_CMD

@@ -22,7 +22,7 @@ jobs:
       - name: Find changed languages
         if: github.event_name == 'pull_request' || github.ref != 'refs/heads/master'
         run: |
-          before_ref=${{ github.event.before || github.event.pull_request.base.sha }}
+          before_ref=${{ github.event.pull_request.base.sha || 'origin/master' }}
           git diff --name-only $before_ref ${{ github.sha }} > changed_files
 
           if ! egrep -q '^(_test/.*|test|docker_test)$' changed_files; then
@@ -59,3 +59,4 @@ jobs:
 
       - name: Run tests
         run: ./docker_test '${{ matrix.lang }}'
+        timeout-minutes: 10
