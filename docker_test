@@ -8,4 +8,12 @@ if [[ -z $DOCKER_IMAGE ]]; then
   exit 1
 fi
 
-docker run --rm -v "$PWD":/quicksort -w /quicksort $DOCKER_ARGS $DOCKER_IMAGE bash ./test "$1"
+docker_run() {
+  docker run --rm --entrypoint= -v "$PWD":/quicksort $DOCKER_ARGS $@
+}
+
+if [[ $2 == shell ]]; then
+  docker_run -it -w /quicksort/"$1" $DOCKER_IMAGE bash
+else
+  docker_run -w /quicksort $DOCKER_IMAGE bash ./test "$1"
+fi
