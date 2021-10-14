@@ -26,6 +26,9 @@ test_suite() {
 
     printf "Running test case $((++k)) (size $input_n)... "
     local actual=$(printf "$input_n\n$input_arr\n" | $prog)
+    if [[ -n $ALLOW_TRAILING_SPACE ]]; then
+      actual=$(echo $actual | xargs)
+    fi
     assert "$expected" "$actual" "$input_arr"
     echo "Done"
 
