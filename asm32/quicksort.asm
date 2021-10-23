@@ -18,39 +18,39 @@ section .text                   ; // code
   global main
   extern printf, scanf
 
-  swap:                         ; void swap(int i, int j) {
+  swap:                         ; void swap(int* it1, int* it2) {
     pusha
     mov eax, [esp+32+4]
     mov ebx, [esp+32+8]
-    mov ecx, [arr+4*eax]        ;   int c = arr[i];
-    mov edx, [arr+4*ebx]        ;   int d = arr[j];
-    mov [arr+4*eax], edx        ;   arr[i] = d;
-    mov [arr+4*ebx], ecx        ;   arr[j] = c;
+    mov ecx, [eax]              ;   int c = *it1;
+    mov edx, [ebx]              ;   int d = *it2;
+    mov [eax], edx              ;   *it1 = d;
+    mov [ebx], ecx              ;   *it2 = c;
     popa
     ret                         ; }
 
-  quicksort:                    ; void quicksort(int st, int end) {
-    mov eax, [esp+4]            ;   int _i = st;
+  quicksort:                    ; void quicksort(int* st, int* end) {
+    mov eax, [esp+4]            ;   int* _it = st;
     mov edx, [esp+8]
     cmp eax, edx
     je .end_if                  ;   if(st != end) {
-      mov ecx, eax              ;     int _sep = st;
-      mov ebx, [arr+4*eax]      ;     int _pivot = arr[st];
+      mov ecx, eax              ;     int* _sep = st;
+      mov ebx, [eax]            ;     int _pivot = *st;
 
       .loop:
-        add eax, 1
+        add eax, 4
 
         cmp eax, edx
-        je .end_loop            ;     while((++_i) != end) {
+        je .end_loop            ;     while((++_it) != end) {
 
-          cmp [arr+4*eax], ebx  ;
-          jge .loop             ;       if(arr[_i] >= _pivot) continue;
+          cmp [eax], ebx
+          jge .loop             ;       if(*_it >= _pivot) continue;
 
-          add ecx, 1
+          add ecx, 4
           push eax
           push ecx
           call swap
-          add esp, 8            ;       swap(++_sep, _i);
+          add esp, 8            ;       swap(++_sep, _it);
     
           jmp .loop             ;     }
          
@@ -67,7 +67,7 @@ section .text                   ; // code
       pop ecx                   ;     quicksort(st, _sep);
 
       push dword [esp+8]
-      add ecx, 1
+      add ecx, 4
       push ecx
       call quicksort
       add esp, 8                ;     quicksort(++_sep, end);
@@ -133,10 +133,13 @@ section .text                   ; // code
 
     call read_arr               ;   read_arr();
 
-    push dword [n]
-    push 0
+    mov eax, [n]
+    imul eax, 4
+    add eax, arr
+    push eax
+    push arr
     call quicksort
-    add esp, 8                  ;   quicksort(0, n);
+    add esp, 8                  ;   quicksort(arr, arr + n);
 
     call write_arr              ;   write_arr();
     ret                         ; }

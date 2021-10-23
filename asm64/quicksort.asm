@@ -8,10 +8,11 @@ section .data                   ; // compile-time constants
 
 section .bss                    ; // variables
 
-  n: resq 1                     ; long long n;
-  arr: resq MAXN                ; long long arr[MAXN];
+                                ; typedef long long ll;
+  n: resq 1                     ; ll n;
+  arr: resq MAXN                ; ll arr[MAXN];
 
-  i: resq 1                     ; long long i;
+  i: resq 1                     ; ll i;
 
 section .text                   ; // code
 
@@ -19,43 +20,40 @@ section .text                   ; // code
   extern printf, scanf
   default rel
 
-  swap:                         ; void swap(int i, int j) {
+  swap:                         ; void swap(ll* it1, ll* it2) {
     push rcx
     push rdx
-    lea r8, [arr]
-    mov rcx, [r8+8*rdi]         ;   int c = arr[i];
-    mov rdx, [r8+8*rsi]         ;   int d = arr[j];
-    mov [r8+8*rdi], rdx         ;   arr[i] = d;
-    mov [r8+8*rsi], rcx         ;   arr[j] = c;
+    mov rcx, [rdi]              ;   ll c = *it1;
+    mov rdx, [rsi]              ;   ll d = *it2;
+    mov [rdi], rdx              ;   *it1 = d;
+    mov [rsi], rcx              ;   *it2 = c;
     pop rdx
     pop rcx
     ret                         ; }
 
-  quicksort:                    ; void quicksort(int st, int end) {
+  quicksort:                    ; void quicksort(ll* st, ll* end) {
     mov r9, rdi
     mov r10, rsi
-    mov rax, r9                 ;   int _i = st;
+    mov rax, r9                 ;   ll* _it = st;
 
     cmp r9, r10
     je .end_if                  ;   if(st != end) {
-      mov rcx, r9               ;     int _sep = st;
-      lea r8, [arr]
-      mov rbx, [r8+8*rdi]       ;     int _pivot = arr[st];
+      mov rcx, r9               ;     ll* _sep = st;
+      mov rbx, [rdi]            ;     ll _pivot = *st;
 
       .loop:
-        add rax, 1
+        add rax, 8
         
         cmp rax, r10
-        je .end_loop            ;     while((++_i) != end) {
+        je .end_loop            ;     while((++_it) != end) {
 
-          lea r8, [arr]
-          cmp [r8+8*rax], rbx
-          jge .loop             ;       if(arr[_i] >= _pivot) continue;
+          cmp [rax], rbx
+          jge .loop             ;       if(*_it >= _pivot) continue;
 
-          add rcx, 1
+          add rcx, 8
           mov rdi, rcx
           mov rsi, rax
-          call swap             ;       swap(++_sep, _i);
+          call swap             ;       swap(++_sep, _it);
           jmp .loop             ;     }
 
       .end_loop:
@@ -70,7 +68,7 @@ section .text                   ; // code
       call quicksort            ;     quicksort(st, _sep);
 
       pop rdi
-      add rdi, 1
+      add rdi, 8
       pop rsi
       call quicksort            ;     quicksort(++_sep, end);
 
@@ -135,9 +133,11 @@ section .text                   ; // code
 
     call read_arr               ;   read_arr();
 
-    xor rdi, rdi
+    lea rdi, [arr]
     mov rsi, [n]
-    call quicksort              ;   quicksort(0, n);
+    imul rsi, 8
+    add rsi, rdi
+    call quicksort              ;   quicksort(arr, arr + n);
 
     call write_arr              ;   write_arr();
     ret                         ; }
