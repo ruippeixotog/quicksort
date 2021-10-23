@@ -1,13 +1,13 @@
 section .data                   ; // compile-time constants
 
-  num_fmt db "%lld", 0
-  num_sp_fmt db "%lld ", 0
+  num_fmt db "%d", 0
+  num_sp_fmt db "%d ", 0
   nl: db 0xA, 0
 
 section .bss                    ; // variables
 
   n: resd 1                     ; int n;
-  arr: resq 1                   ; ll* arr;
+  arr: resq 1                   ; int* arr;
 
   i: resd 1                     ; int i;
 
@@ -17,37 +17,37 @@ section .text                   ; // code
   extern malloc, printf, scanf
   default rel
 
-  swap:                         ; void swap(ll* it1, ll* it2) {
+  swap:                         ; void swap(int* it1, int* it2) {
     push rcx
     push rdx
-    mov rcx, [rdi]              ;   ll c = *it1;
-    mov rdx, [rsi]              ;   ll d = *it2;
-    mov [rdi], rdx              ;   *it1 = d;
-    mov [rsi], rcx              ;   *it2 = c;
+    mov ecx, [rdi]              ;   int c = *it1;
+    mov edx, [rsi]              ;   int d = *it2;
+    mov [rdi], edx              ;   *it1 = d;
+    mov [rsi], ecx              ;   *it2 = c;
     pop rdx
     pop rcx
     ret                         ; }
 
-  quicksort:                    ; void quicksort(ll* st, ll* end) {
+  quicksort:                    ; void quicksort(int* st, int* end) {
     mov r9, rdi
     mov r10, rsi
-    mov rax, r9                 ;   ll* _it = st;
+    mov rax, r9                 ;   int* _it = st;
 
     cmp r9, r10
     je .end_if                  ;   if(st != end) {
-      mov rcx, r9               ;     ll* _sep = st;
-      mov rbx, [rdi]            ;     ll _pivot = *st;
+      mov rcx, r9               ;     int* _sep = st;
+      mov ebx, [rdi]            ;     int _pivot = *st;
 
       .loop:
-        add rax, 8
+        add rax, 4
         
         cmp rax, r10
         je .end_loop            ;     while((++_it) != end) {
 
-          cmp [rax], rbx
+          cmp [rax], ebx
           jge .loop             ;       if(*_it >= _pivot) continue;
 
-          add rcx, 8
+          add rcx, 4
           mov rdi, rcx
           mov rsi, rax
           call swap             ;       swap(++_sep, _it);
@@ -65,7 +65,7 @@ section .text                   ; // code
       call quicksort            ;     quicksort(st, _sep);
 
       pop rdi
-      add rdi, 8
+      add rdi, 4
       pop rsi
       call quicksort            ;     quicksort(++_sep, end);
 
@@ -75,7 +75,7 @@ section .text                   ; // code
   read_arr:                     ; void read_arr() {
     mov ecx, [n]
     mov [i], ecx                ;   int i = n;
-    mov rbx, [arr]              ;   ll* _arr = arr;
+    mov rbx, [arr]              ;   int* _arr = arr;
 
     .loop:
       sub dword [i], 1
@@ -83,10 +83,10 @@ section .text                   ; // code
 
       lea rdi, [num_fmt]
       mov rsi, rbx
-      xor rax, rax
+      xor al, al
       call scanf WRT ..plt      ;     scanf("%d", _arr);
 
-      add rbx, 8                ;     _arr++;
+      add rbx, 4                ;     _arr++;
       jmp .loop                 ;   }
 
     .end_loop:
@@ -95,13 +95,11 @@ section .text                   ; // code
   write_arr:                    ; void write_arr() {
     mov ecx, [n]
     mov [i], ecx                ;   int i = n;
-    mov rbx, [arr]              ;   ll* _arr = arr;
+    mov rbx, [arr]              ;   int* _arr = arr;
 
     .loop:
       sub dword [i], 1
       js .end_loop              ;   while((--i) >= 0) {
-
-      mov rsi, [rbx]
 
       jnz .else
         lea rdi, [num_fmt]
@@ -110,35 +108,36 @@ section .text                   ; // code
         lea rdi, [num_sp_fmt]
       .end_if:
 
-      xor rax, rax
+      mov esi, [rbx]
+      xor al, al
       call printf WRT ..plt     ;     printf(i ? "%d " : "%d", *_arr);
 
-      add rbx, 8                ;     _arr++;
+      add rbx, 4                ;     _arr++;
       jmp .loop                 ;   }
 
     .end_loop:
     lea rdi, [nl]
-    xor rax, rax
+    xor al, al
     call printf WRT ..plt       ;   printf("\n");
     ret                         ; }
 
   main:                         ; void main() {
     lea rdi, [num_fmt]
     lea rsi, [n]
-    xor rax, rax
+    xor al, al
     call scanf WRT ..plt        ;   scanf("%d", &n);
 
     mov edi, [n]
-    imul edi, 8
+    imul edi, 4
     call malloc WRT ..plt
-    mov [arr], rax              ;   arr = malloc(8 * n);
+    mov [arr], rax              ;   arr = malloc(4 * n);
 
     call read_arr               ;   read_arr();
 
     mov rdi, [arr]
     xor rsi, rsi
     mov esi, [n]
-    imul rsi, 8
+    imul rsi, 4
     add rsi, rdi
     call quicksort              ;   quicksort(arr, arr + n);
 
