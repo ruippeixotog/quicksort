@@ -1,5 +1,3 @@
-%define MAXN 10                 ; #define MAXN 10
-
 section .data                   ; // compile-time constants
 
   num_fmt db "%d", 0
@@ -9,14 +7,14 @@ section .data                   ; // compile-time constants
 section .bss                    ; // variables
 
   n: resd 1                     ; int n;
-  arr: resd MAXN                ; int arr[MAXN];
+  arr: resd 1                   ; int* arr;
 
   i: resd 1                     ; int i;
 
 section .text                   ; // code
 
   global main
-  extern printf, scanf
+  extern malloc, printf, scanf
 
   swap:                         ; void swap(int* it1, int* it2) {
     pusha
@@ -78,7 +76,7 @@ section .text                   ; // code
   read_arr:                     ; void read_arr() {
     mov ecx, [n]
     mov [i], ecx                ;   int i = n;
-    mov ebx, arr                ;   int* _arr = arr;
+    mov ebx, [arr]              ;   int* _arr = arr;
 
     .loop:
       sub dword [i], 1
@@ -98,7 +96,7 @@ section .text                   ; // code
   write_arr:                    ; void write_arr() {
     mov ecx, [n]
     mov [i], ecx                ;   int i = n;
-    mov ebx, arr                ;   int* _arr = arr;
+    mov ebx, [arr]              ;   int* _arr = arr;
 
     .loop:
       sub dword [i], 1
@@ -131,13 +129,20 @@ section .text                   ; // code
     call scanf
     add esp, 8                  ;   scanf("%d", &n);
 
+    mov ecx, [n]
+    imul ecx, 4
+    push ecx
+    call malloc
+    add esp, 4
+    mov [arr], eax              ;   arr = malloc(4 * n);
+
     call read_arr               ;   read_arr();
 
     mov eax, [n]
     imul eax, 4
-    add eax, arr
+    add eax, [arr]
     push eax
-    push arr
+    push dword [arr]
     call quicksort
     add esp, 8                  ;   quicksort(arr, arr + n);
 

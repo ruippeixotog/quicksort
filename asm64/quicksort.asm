@@ -1,5 +1,3 @@
-%define MAXN 10                 ; #define MAXN 10
-
 section .data                   ; // compile-time constants
 
   num_fmt db "%lld", 0
@@ -10,14 +8,14 @@ section .bss                    ; // variables
 
                                 ; typedef long long ll;
   n: resq 1                     ; ll n;
-  arr: resq MAXN                ; ll arr[MAXN];
+  arr: resq 1                   ; ll* arr;
 
   i: resq 1                     ; ll i;
 
 section .text                   ; // code
 
   global main
-  extern printf, scanf
+  extern malloc, printf, scanf
   default rel
 
   swap:                         ; void swap(ll* it1, ll* it2) {
@@ -78,7 +76,7 @@ section .text                   ; // code
   read_arr:                     ; void read_arr() {
     mov rcx, [n]
     mov [i], rcx                ;   int i = n;
-    lea rbx, [arr]              ;   int* _arr = arr;
+    mov rbx, [arr]              ;   int* _arr = arr;
 
     .loop:
       sub qword [i], 1
@@ -98,7 +96,7 @@ section .text                   ; // code
   write_arr:                    ; void write_arr() {
     mov rcx, [n]
     mov [i], rcx                ;   int i = n;
-    lea rbx, [arr]              ;   int* _arr = arr;
+    mov rbx, [arr]              ;   int* _arr = arr;
 
     .loop:
       sub qword [i], 1
@@ -131,9 +129,14 @@ section .text                   ; // code
     xor rax, rax
     call scanf WRT ..plt        ;   scanf("%d", &n);
 
+    mov rdi, [n]
+    imul rdi, 8
+    call malloc WRT ..plt
+    mov [arr], rax              ;   arr = malloc(8 * n);
+
     call read_arr               ;   read_arr();
 
-    lea rdi, [arr]
+    mov rdi, [arr]
     mov rsi, [n]
     imul rsi, 8
     add rsi, rdi
