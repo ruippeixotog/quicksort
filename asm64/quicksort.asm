@@ -6,11 +6,10 @@ section .data                   ; // compile-time constants
 
 section .bss                    ; // variables
 
-                                ; typedef long long ll;
-  n: resq 1                     ; ll n;
+  n: resd 1                     ; int n;
   arr: resq 1                   ; ll* arr;
 
-  i: resq 1                     ; ll i;
+  i: resd 1                     ; int i;
 
 section .text                   ; // code
 
@@ -74,12 +73,12 @@ section .text                   ; // code
     ret                         ; }
 
   read_arr:                     ; void read_arr() {
-    mov rcx, [n]
-    mov [i], rcx                ;   int i = n;
-    mov rbx, [arr]              ;   int* _arr = arr;
+    mov ecx, [n]
+    mov [i], ecx                ;   int i = n;
+    mov rbx, [arr]              ;   ll* _arr = arr;
 
     .loop:
-      sub qword [i], 1
+      sub dword [i], 1
       js .end_loop              ;   while((--i) >= 0) {
 
       lea rdi, [num_fmt]
@@ -94,12 +93,12 @@ section .text                   ; // code
     ret                         ; }
 
   write_arr:                    ; void write_arr() {
-    mov rcx, [n]
-    mov [i], rcx                ;   int i = n;
-    mov rbx, [arr]              ;   int* _arr = arr;
+    mov ecx, [n]
+    mov [i], ecx                ;   int i = n;
+    mov rbx, [arr]              ;   ll* _arr = arr;
 
     .loop:
-      sub qword [i], 1
+      sub dword [i], 1
       js .end_loop              ;   while((--i) >= 0) {
 
       mov rsi, [rbx]
@@ -129,15 +128,16 @@ section .text                   ; // code
     xor rax, rax
     call scanf WRT ..plt        ;   scanf("%d", &n);
 
-    mov rdi, [n]
-    imul rdi, 8
+    mov edi, [n]
+    imul edi, 8
     call malloc WRT ..plt
     mov [arr], rax              ;   arr = malloc(8 * n);
 
     call read_arr               ;   read_arr();
 
     mov rdi, [arr]
-    mov rsi, [n]
+    xor rsi, rsi
+    mov esi, [n]
     imul rsi, 8
     add rsi, rdi
     call quicksort              ;   quicksort(arr, arr + n);
