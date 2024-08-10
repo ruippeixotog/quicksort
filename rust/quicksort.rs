@@ -19,10 +19,8 @@ fn quicksort(v: &mut [i32]) {
 
 fn main() {
   let stdin = io::stdin();
-  let mut v: Vec<i32> = match stdin.lock().lines().nth(1) {
-    Some(Ok(s)) => s.split(' ').flat_map(|s| s.parse()).collect(),
-    _ => unreachable!()
-  };
+  let mut v: Vec<i32> = stdin.lock().lines().nth(1)
+    .unwrap().unwrap().split(' ').flat_map(|s| s.parse()).collect();
 
   quicksort(&mut v);
 
